@@ -11,28 +11,6 @@ def record_raw_audio(filename=r"C:\Users\limue\Documents\ASIC Hackathon\python l
     print("Recording finished")
     wavfile.write(filename, fs, recording)
 
-def apply_muffled(input_file = r"C:\Users\limue\Documents\ASIC Hackathon\python logic check\input.wav", output_file = r'C:\Users\limue\Documents\ASIC Hackathon\python logic check\muffled_output.wav'):
-    fs, data = wavfile.read(input_file)
-    
-    audio_in = data.astype(np.int16)
-    processed_audio = np.zeros_like(audio_in, dtype=np.int16)
-
-    alpha = 0.001   # smaller = more muffled
-
-    y_prev = 0.0
-
-    for i in range(len(audio_in)):
-        x = float(audio_in[i])
-        
-        # First-order low-pass filter
-        y = y_prev + alpha * (x - y_prev)
-        
-        processed_audio[i] = y
-        y_prev = y
-
-    final_audio = np.clip(processed_audio, -32768, 32767).astype(np.int16)
-    wavfile.write(output_file, fs, final_audio)
-    print("Muffled effect applied")
 
 def apply_noise_gate(input_file, output_file):
     fs, data = wavfile.read(input_file)
@@ -67,10 +45,5 @@ def apply_noise_gate(input_file, output_file):
     final_audio = np.clip(processed_audio, -32768, 32767).astype(np.int16)
     wavfile.write(output_file, fs, final_audio)
     print("Noise gate applied")
-
-
-if __name__ == "__main__":
-    #record_raw_audio()
-    apply_muffled()
-#record_raw_audio()
-#apply_noise_gate(r'C:\Users\limue\Documents\ASIC Hackathon\python logic check\input.wav', r'C:\Users\limue\Documents\ASIC Hackathon\python logic check\clean_output.wav')
+record_raw_audio()
+apply_noise_gate(r'C:\Users\limue\Documents\ASIC Hackathon\python logic check\input.wav', r'C:\Users\limue\Documents\ASIC Hackathon\python logic check\clean_output.wav')
