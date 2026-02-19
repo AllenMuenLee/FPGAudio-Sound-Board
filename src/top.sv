@@ -4,10 +4,58 @@
 // Integrates the custom audio_processor with WM8731 codec drivers
 // Connects to DE1-SoC hardware pins for real-time audio processing
 // Controls: KEY[0]=Reset, SW[2:0]=Effect selection
-// Status: LEDR[0]=Config done, LEDR[1]=Audio flowing
+// Status: VU meter displays audio level on LEDR[9:0]
 // ============================================================================
 
 `include "main.sv"
+
+// ============================================================================
+// Audio Processor Module - Effect Selector
+// ============================================================================
+// Instantiates all effect modules from main1.sv and selects between them
+// All effects process in parallel, output mux selects based on SW[2:0]
+// ============================================================================
+
+module audio_processor (
+    input             clk,
+    input             reset,
+    input      [15:0] audio_in,
+    input      [9:0]  SW,
+    output reg [15:0] audio_out
+);
+    wire [2:0] effect_select;
+    assign effect_select = SW[2:0];
+    
+    wire [15:0] noise_gate_out;
+    wire [15:0] high_pitch_out;
+    wire [15:0] low_pitch_out;
+    wire [15:0] reverb_out;
+    wire [15:0] muffled_out;
+    
+    noise_gate ng_inst (.clk(clk), .audio_in(audio_in), .audio_out(noise_gate_out));
+    high_pitch_effect hp_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(high_pitch_out));
+    low_pitch_effect lp_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(low_pitch_out));
+    reverb_effect rev_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(reverb_out));
+    muffled_effect muf_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(muffled_out));
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) audio_out <= 16'd0;
+        else begin
+            case (effect_select)
+                3'b000: audio_out <= noise_gate_out;
+                3'b001: audio_out <= high_pitch_out;
+                3'b010: audio_out <= low_pitch_out;
+                3'b011: audio_out <= reverb_out;
+                3'b100: audio_out <= muffled_out;
+                default: audio_out <= audio_in;
+            endcase
+        end
+    end
+endmodule
+
+// ============================================================================
+// Top-Level System Integration
+// ============================================================================
 
 module de1soc_audio_top (
     // ========================================================================
@@ -98,21 +146,6 @@ module de1soc_audio_top (
         .audio_in_r(audio_in_right),
         .audio_valid(audio_valid)
     );
-
-    main noise_gate(
-        .clk(CLOCK_50),
-        .reset(reset),
-        .audio_in(audio_in_left),
-        .audio_out(audio_out_left)
-    )
-
-    main noise_gate(
-        .clk(CLOCK_50),
-        .reset(reset),
-        .audio_in(audio_in_right),
-        .audio_out(audio_out_right)
-    )
-
     
     // ========================================================================
     // Custom Audio Processor - Left Channel
