@@ -7,7 +7,7 @@
 // Status: LEDR[0]=Config done, LEDR[1]=Audio flowing
 // ============================================================================
 
-`include "kits.sv"
+`include "main.sv"
 
 module de1soc_audio_top (
     // ========================================================================
@@ -99,14 +99,14 @@ module de1soc_audio_top (
         .audio_valid(audio_valid)
     );
 
-    kits noise_gate(
+    main noise_gate(
         .clk(CLOCK_50),
         .reset(reset),
         .audio_in(audio_in_left),
         .audio_out(audio_out_left)
     )
 
-    kits noise_gate(
+    main noise_gate(
         .clk(CLOCK_50),
         .reset(reset),
         .audio_in(audio_in_right),
