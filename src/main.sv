@@ -1,293 +1,245 @@
+// ============================================================================
+// Multi-Effect Audio Processor for DE1-SoC Board - Modular Design
+// ============================================================================
+// Each audio effect is implemented as a separate module for better organization
+// Compatible with DE1-SoC board audio system (50MHz clock, 16-bit audio)
+//
+// Switch Control (SW[2:0]):
+//   3'b000 = Noise Gate (professional implementation)
+//   3'b001 = High Pitch (helium voice)
+//   3'b010 = Low Pitch (deep voice)
+//   3'b011 = Reverb (echo/spatial depth)
+//   3'b100 = Muffled (low-pass filter)
+// ============================================================================
+
+// ============================================================================
+// MODULE 1: Noise Gate Effect
+// ============================================================================
 module noise_gate (
     input  wire        clk,
     input  wire signed [15:0] audio_in,
     output reg  signed [15:0] audio_out
 );
-
-    // Fixed-point parameters (10-bit fractional precision)
-    localparam signed [15:0] OPEN_THR  = 16'd1000; //1000 db
-    localparam signed [15:0] CLOSE_THR = 16'd500; // 500 db
-    localparam [9:0]         GAIN_MAX  = 10'd1024;
-    localparam [9:0]         GAIN_MIN  = 10'd102;
-    localparam [9:0]         ATK_STEP  = 10'd10;
-    localparam [9:0]         RLS_STEP  = 10'd1;
-
-    reg [9:0]  gain = 10'd102; // Start at floor
-    reg        is_open = 0;
+    localparam signed [15:0] OPEN_THR  = 16'd1000;
+    localparam signed [15:0] CLOSE_THR = 16'd500;
+    localparam [9:0] GAIN_MAX = 10'd1023;
+    localparam [9:0] GAIN_MIN = 10'd102;
+    localparam [9:0] ATK_STEP = 10'd10;
+    localparam [9:0] RLS_STEP = 10'd1;
+    
+    reg [9:0] gain = 10'd102;
+    reg is_open = 1'b0;
     reg [15:0] abs_v;
-    reg signed [25:0] mult_result; // Intermediate 26-bit product
-
+    reg signed [25:0] mult_result;
+    
     always @(posedge clk) begin
-        // 1. Calculate Absolute Value
         abs_v <= (audio_in[15]) ? -audio_in : audio_in;
-
-        // 2. Hysteresis State Logic
-        if (abs_v > OPEN_THR)
-            is_open <= 1'b1;
-        else if (abs_v < CLOSE_THR)
-            is_open <= 1'b0;
-
-        // 3. Gain Smoothing (Attack/Release)
+        if (abs_v > OPEN_THR) is_open <= 1'b1;
+        else if (abs_v < CLOSE_THR) is_open <= 1'b0;
         if (is_open) begin
-            if (gain < (GAIN_MAX - ATK_STEP))
-                gain <= gain + ATK_STEP;
-            else
-                gain <= GAIN_MAX;
+            if (gain < (GAIN_MAX - ATK_STEP)) gain <= gain + ATK_STEP;
+            else gain <= GAIN_MAX;
         end else begin
-            if (gain > (GAIN_MIN + RLS_STEP))
-                gain <= gain - RLS_STEP;
-            else
-                gain <= GAIN_MIN;
+            if (gain > (GAIN_MIN + RLS_STEP)) gain <= gain - RLS_STEP;
+            else gain <= GAIN_MIN;
         end
-
-        // 4. Apply Gain (Fixed-Point Multiplication)
         mult_result <= audio_in * $signed({1'b0, gain});
-        
-        // 5. Shift back to 16-bit (Divide by 1024)
         audio_out <= mult_result[25:10];
     end
 endmodule
 
-module audio_processor (
-    input             clk,          // 50MHz system clock
-    input             reset,        // Active high reset
-    input      [15:0] audio_in,     // 16-bit signed audio input
-    input      [9:0]  SW,           // Switch inputs (using SW[2:0] for effect select)
-    output reg [15:0] audio_out     // 16-bit signed audio output
+// ============================================================================
+// MODULE 2: High Pitch Effect
+// ============================================================================
+module high_pitch_effect (
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [15:0] audio_in,
+    output reg  [15:0] audio_out
 );
+    localparam HIGH_PITCH_PERIOD = 1042;
+    reg [10:0] counter;
+    reg hold;
+    reg [15:0] held_sample;
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            counter <= 11'd0;
+            hold <= 1'b0;
+            held_sample <= 16'd0;
+            audio_out <= 16'd0;
+        end else begin
+            if (counter >= HIGH_PITCH_PERIOD - 1) begin
+                counter <= 11'd0;
+                hold <= ~hold;
+                if (hold) held_sample <= audio_in;
+            end else counter <= counter + 1'd1;
+            audio_out <= hold ? held_sample : audio_in;
+        end
+    end
+endmodule
 
-    // Effect selection from switches
+// ============================================================================
+// MODULE 3: Low Pitch Effect
+// ============================================================================
+module low_pitch_effect (
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [15:0] audio_in,
+    output reg  [15:0] audio_out
+);
+    localparam LOW_PITCH_PERIOD = 2084;
+    reg [11:0] counter;
+    reg repeat_sig;
+    reg [15:0] held_sample;
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            counter <= 12'd0;
+            repeat_sig <= 1'b0;
+            held_sample <= 16'd0;
+            audio_out <= 16'd0;
+        end else begin
+            if (counter >= LOW_PITCH_PERIOD - 1) begin
+                counter <= 12'd0;
+                repeat_sig <= ~repeat_sig;
+                if (!repeat_sig) held_sample <= audio_in;
+            end else counter <= counter + 1'd1;
+            audio_out <= held_sample;
+        end
+    end
+endmodule
+
+// ============================================================================
+// MODULE 4: Reverb Effect
+// ============================================================================
+module reverb_effect (
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [15:0] audio_in,
+    output reg  [15:0] audio_out
+);
+    localparam DELAY_LENGTH = 512;
+    reg [15:0] delay_buffer [0:DELAY_LENGTH-1];
+    reg [8:0] write_ptr;
+    reg [8:0] read_ptr;
+    reg [15:0] delay_out;
+    reg [16:0] mix;
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            write_ptr <= 9'd0;
+            read_ptr <= 9'd0;
+            delay_out <= 16'd0;
+            audio_out <= 16'd0;
+        end else begin
+            delay_buffer[write_ptr] <= audio_in + (delay_out >>> 2);
+            delay_out <= delay_buffer[read_ptr];
+            mix = {audio_in[15], audio_in} + (delay_out >>> 2);
+            if (mix[16:15] == 2'b01) audio_out <= 16'h7FFF;
+            else if (mix[16:15] == 2'b10) audio_out <= 16'h8000;
+            else audio_out <= mix[15:0];
+            write_ptr <= write_ptr + 1'd1;
+            read_ptr <= read_ptr + 1'd1;
+        end
+    end
+endmodule
+
+// ============================================================================
+// MODULE 5: Muffled Effect
+// ============================================================================
+module muffled_effect (
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [15:0] audio_in,
+    output reg  [15:0] audio_out
+);
+    reg [15:0] prev1, prev2, prev3;
+    reg [17:0] sum;
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            prev1 <= 16'd0;
+            prev2 <= 16'd0;
+            prev3 <= 16'd0;
+            audio_out <= 16'd0;
+        end else begin
+            prev3 <= prev2;
+            prev2 <= prev1;
+            prev1 <= audio_in;
+            sum = {audio_in[15], audio_in[15], audio_in} +
+                  {prev1[15], prev1[15], prev1} +
+                  {prev2[15], prev2[15], prev2} +
+                  {prev3[15], prev3[15], prev3};
+            audio_out <= sum[17:2];
+        end
+    end
+endmodule
+
+// ============================================================================
+// MODULE 6: Audio Processor (Top Level)
+// ============================================================================
+module audio_processor (
+    input             clk,
+    input             reset,
+    input      [15:0] audio_in,
+    input      [9:0]  SW,
+    output reg [15:0] audio_out
+);
     wire [2:0] effect_select;
     assign effect_select = SW[2:0];
     
-    // ========================================================================
-    // High Pitch: Sample Rate Manipulation
-    // ========================================================================
-    // Creates pitch shift by periodically skipping samples
-    // Faster playback = higher pitch
-    // ========================================================================
-    localparam HIGH_PITCH_PERIOD = 1042;  // ~48kHz at 50MHz clock
+    wire [15:0] noise_gate_out;
+    wire [15:0] high_pitch_out;
+    wire [15:0] low_pitch_out;
+    wire [15:0] reverb_out;
+    wire [15:0] muffled_out;
     
-    reg [10:0] high_pitch_counter;  // Counter for sample rate (needs 11 bits for 1042)
-    reg        high_pitch_hold;     // Sample hold signal
-    reg [15:0] high_pitch_sample;   // Held sample for pitch shift
+    noise_gate ng_inst (
+        .clk(clk),
+        .audio_in(audio_in),
+        .audio_out(noise_gate_out)
+    );
     
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            high_pitch_counter <= 11'd0;
-            high_pitch_hold <= 1'b0;
-            high_pitch_sample <= 16'd0;
-        end else begin
-            if (high_pitch_counter >= HIGH_PITCH_PERIOD - 1) begin
-                high_pitch_counter <= 11'd0;
-                high_pitch_hold <= ~high_pitch_hold;  // Toggle hold
-                if (high_pitch_hold) begin
-                    high_pitch_sample <= audio_in;  // Capture new sample
-                end
-            end else begin
-                high_pitch_counter <= high_pitch_counter + 1'd1;
-            end
-        end
-    end
+    high_pitch_effect hp_inst (
+        .clk(clk),
+        .reset(reset),
+        .audio_in(audio_in),
+        .audio_out(high_pitch_out)
+    );
     
-    // ========================================================================
-    // Low Pitch: Sample Repetition
-    // ========================================================================
-    // Creates pitch shift by repeating samples
-    // Slower playback = lower pitch
-    // ========================================================================
-    localparam LOW_PITCH_PERIOD = 2084;  // Double the high pitch period
+    low_pitch_effect lp_inst (
+        .clk(clk),
+        .reset(reset),
+        .audio_in(audio_in),
+        .audio_out(low_pitch_out)
+    );
     
-    reg [11:0] low_pitch_counter;   // Counter for sample rate (needs 12 bits for 2084)
-    reg        low_pitch_repeat;    // Sample repeat signal
-    reg [15:0] low_pitch_sample;    // Held sample for pitch shift
+    reverb_effect rev_inst (
+        .clk(clk),
+        .reset(reset),
+        .audio_in(audio_in),
+        .audio_out(reverb_out)
+    );
+    
+    muffled_effect muf_inst (
+        .clk(clk),
+        .reset(reset),
+        .audio_in(audio_in),
+        .audio_out(muffled_out)
+    );
     
     always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            low_pitch_counter <= 12'd0;
-            low_pitch_repeat <= 1'b0;
-            low_pitch_sample <= 16'd0;
-        end else begin
-            if (low_pitch_counter >= LOW_PITCH_PERIOD - 1) begin
-                low_pitch_counter <= 12'd0;
-                low_pitch_repeat <= ~low_pitch_repeat;  // Toggle repeat
-                if (!low_pitch_repeat) begin
-                    low_pitch_sample <= audio_in;  // Capture new sample
-                end
-            end else begin
-                low_pitch_counter <= low_pitch_counter + 1'd1;
-            end
+        if (reset) audio_out <= 16'd0;
+        else begin
+            case (effect_select)
+                3'b000: audio_out <= noise_gate_out;
+                3'b001: audio_out <= high_pitch_out;
+                3'b010: audio_out <= low_pitch_out;
+                3'b011: audio_out <= reverb_out;
+                3'b100: audio_out <= muffled_out;
+                default: audio_out <= audio_in;
+            endcase
         end
     end
-    
-    // ========================================================================
-    // Reverb: Delay Line Buffer
-    // ========================================================================
-    // Creates echo/reverb effect using a circular delay buffer
-    // Delay time: ~10ms (512 samples)
-    // ========================================================================
-    localparam DELAY_LENGTH = 512;  // Power of 2 for simple addressing
-    
-    reg [15:0] delay_buffer [0:DELAY_LENGTH-1];  // Circular buffer for delay
-    reg [8:0]  delay_write_ptr;                   // Write pointer (9 bits for 512)
-    reg [8:0]  delay_read_ptr;                    // Read pointer
-    reg [15:0] delay_output;                      // Output from delay line
-    
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            delay_write_ptr <= 9'd0;
-            delay_read_ptr <= 9'd0;
-            delay_output <= 16'd0;
-        end else begin
-            // Write current input mixed with feedback to delay buffer
-            delay_buffer[delay_write_ptr] <= audio_in + (delay_output >>> 2);  // 25% feedback
-            
-            // Read from delay buffer (fixed delay)
-            delay_output <= delay_buffer[delay_read_ptr];
-            
-            // Increment pointers (circular buffer)
-            delay_write_ptr <= delay_write_ptr + 1'd1;
-            delay_read_ptr <= delay_read_ptr + 1'd1;
-        end
-    end
-    
-    // ========================================================================
-    // Muffled: Low-Pass Filter
-    // ========================================================================
-    // Averages current and previous samples to filter high frequencies
-    // Creates underwater/telephone-like sound
-    // ========================================================================
-    reg [15:0] muffled_prev1;  // Previous sample 1
-    reg [15:0] muffled_prev2;  // Previous sample 2
-    reg [15:0] muffled_prev3;  // Previous sample 3
-    
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            muffled_prev1 <= 16'd0;
-            muffled_prev2 <= 16'd0;
-            muffled_prev3 <= 16'd0;
-        end else begin
-            // Shift register for previous samples
-            muffled_prev3 <= muffled_prev2;
-            muffled_prev2 <= muffled_prev1;
-            muffled_prev1 <= audio_in;
-        end
-    end
-    
-    // ========================================================================
-    // Effect Processing
-    // ========================================================================
-    // Process audio input based on selected effect
-    // ========================================================================
-    
-    reg [15:0] processed_audio;  // Intermediate processed audio
-    reg [15:0] abs_audio;        // Absolute value of audio for noise gate
-    reg [16:0] reverb_mix;       // Temporary for reverb mixing (17 bits for overflow)
-    reg [17:0] muffled_sum;      // Temporary for muffled averaging (18 bits for sum of 4 samples)
-    
-    always @(*) begin
-        case (effect_select)
-            // ----------------------------------------------------------------
-            // Effect 0: Noise Gate
-            // Strips background noise by muting signals below threshold
-            // Threshold set at 2048 (about 6% of max amplitude)
-            // Only passes audio when signal is above noise floor
-            // ----------------------------------------------------------------
-            3'b000: begin
-                // Calculate absolute value for threshold comparison
-                abs_audio = (audio_in[15]) ? -audio_in : audio_in;
-                
-                // If signal is above threshold, pass it through; otherwise mute
-                if (abs_audio > 16'd2048) begin
-                    processed_audio = audio_in;  // Signal detected, pass through
-                end else begin
-                    processed_audio = 16'd0;  // Below threshold, mute (strip noise)
-                end
-            end
-            
-            // ----------------------------------------------------------------
-            // Effect 1: High Pitch (Helium Voice)
-            // Creates high-pitched voice effect like helium inhalation
-            // Uses sample-and-hold to simulate higher pitch
-            // Alternates between current and held sample for pitch shift
-            // ----------------------------------------------------------------
-            3'b001: begin
-                if (high_pitch_hold) begin
-                    processed_audio = high_pitch_sample;  // Use held sample
-                end else begin
-                    processed_audio = audio_in;  // Use current sample
-                end
-            end
-            
-            // ----------------------------------------------------------------
-            // Effect 2: Low Pitch (Deep Voice)
-            // Creates low-pitched voice effect (opposite of helium)
-            // Repeats samples to slow down playback
-            // ----------------------------------------------------------------
-            3'b010: begin
-                if (low_pitch_repeat) begin
-                    processed_audio = low_pitch_sample;  // Repeat held sample
-                end else begin
-                    processed_audio = low_pitch_sample;  // Use held sample
-                end
-            end
-            
-            // ----------------------------------------------------------------
-            // Effect 3: Reverb (Echo/Spatial Depth)
-            // Mixes original signal with delayed version to create echoes
-            // Uses feedback for multiple reflections
-            // Creates spacious, room-like acoustics
-            // ----------------------------------------------------------------
-            3'b011: begin
-                // Mix dry signal (75%) with wet signal (25%)
-                reverb_mix = {audio_in[15], audio_in} + (delay_output >>> 2);
-                
-                // Clamp to prevent overflow
-                if (reverb_mix[16:15] == 2'b01)  // Positive overflow
-                    processed_audio = 16'h7FFF;
-                else if (reverb_mix[16:15] == 2'b10)  // Negative overflow
-                    processed_audio = 16'h8000;
-                else
-                    processed_audio = reverb_mix[15:0];
-            end
-            
-            // ----------------------------------------------------------------
-            // Effect 4: Muffled (Low-Pass Filter)
-            // Averages current and 3 previous samples
-            // Removes high frequencies for underwater/telephone sound
-            // Creates muffled, distant sound effect
-            // ----------------------------------------------------------------
-            3'b100: begin
-                // Average 4 samples (divide by 4 = right shift by 2)
-                muffled_sum = {audio_in[15], audio_in[15], audio_in} + 
-                              {muffled_prev1[15], muffled_prev1[15], muffled_prev1} +
-                              {muffled_prev2[15], muffled_prev2[15], muffled_prev2} +
-                              {muffled_prev3[15], muffled_prev3[15], muffled_prev3};
-                
-                processed_audio = muffled_sum[17:2];  // Divide by 4 (right shift 2)
-            end
-            
-            // ----------------------------------------------------------------
-            // Default: Pass through
-            // ----------------------------------------------------------------
-            default: begin
-                processed_audio = audio_in;
-            end
-        endcase
-    end
-    
-    // ========================================================================
-    // Output Register
-    // ========================================================================
-    // Register the output for better timing
-    // ========================================================================
-    
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            audio_out <= 16'd0;
-        end else begin
-            audio_out <= processed_audio;
-        end
-    end
-
 endmodule
