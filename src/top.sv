@@ -7,6 +7,8 @@
 // Status: LEDR[0]=Config done, LEDR[1]=Audio flowing
 // ============================================================================
 
+`include "kits.sv"
+
 module de1soc_audio_top (
     // ========================================================================
     // Clock and Reset
@@ -96,6 +98,21 @@ module de1soc_audio_top (
         .audio_in_r(audio_in_right),
         .audio_valid(audio_valid)
     );
+
+    kits noise_gate(
+        .clk(CLOCK_50),
+        .reset(reset),
+        .audio_in(audio_in_left),
+        .audio_out(audio_out_left)
+    )
+
+    kits noise_gate(
+        .clk(CLOCK_50),
+        .reset(reset),
+        .audio_in(audio_in_right),
+        .audio_out(audio_out_right)
+    )
+
     
     // ========================================================================
     // Custom Audio Processor - Left Channel
