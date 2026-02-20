@@ -67,9 +67,7 @@ module tb;
     reg [255:0] effect_name;
 
     // Audio sample tick (1 pulse per audio sample)
-    localparam integer SAMPLE_CNT_W = $clog2(SAMPLE_DIV);
-    localparam [SAMPLE_CNT_W-1:0] SAMPLE_DIV_M1 = SAMPLE_DIV - 1;
-    reg [SAMPLE_CNT_W-1:0] sample_cnt;
+    integer sample_cnt;
     reg sample_tick;
     
     // ========================================================================
@@ -110,11 +108,11 @@ module tb;
             sample_cnt <= 'd0;
             sample_tick <= 1'b0;
         end else begin
-            if (sample_cnt == SAMPLE_DIV_M1) begin
-                sample_cnt <= 'd0;
+            if (sample_cnt == SAMPLE_DIV - 1) begin
+                sample_cnt <= 0;
                 sample_tick <= 1'b1;
             end else begin
-                sample_cnt <= sample_cnt + 1'd1;
+                sample_cnt <= sample_cnt + 1;
                 sample_tick <= 1'b0;
             end
         end
