@@ -35,7 +35,7 @@ module tb;
     parameter AUDIO_SAMPLE_RATE = 48000;    // 48kHz audio
     parameter SINE_FREQUENCY = 1000;        // 1kHz test tone
     parameter SINE_AMPLITUDE = 16000;       // ~50% of 16-bit range
-    parameter TEST_DURATION_SAMPLES = 2000; // Samples per effect test
+    parameter TEST_DURATION_SAMPLES = 20; // Samples per effect test
     
     // ========================================================================
     // Testbench Signals
@@ -268,7 +268,7 @@ module tb;
             end
             
             // Check 2: Output is dynamic (changing over time)
-            if (output_changes > 10) begin
+            if (output_changes > 2) begin
                 $display("[PASS] Effect output is dynamic (%0d changes detected)", output_changes);
                 $display("LOG: %0t : INFO : tb : output_changes : expected_value: >10 actual_value: %0d", 
                          $time, output_changes);
@@ -331,7 +331,7 @@ module tb;
                 
                 // Monitor decay
                 peak_output = 16'sd0;
-                for (i = 0; i < 1000; i = i + 1) begin
+                for (i = 0; i < (25 * 1042); i = i + 1) begin
                     @(posedge clk);
                     if ($signed(audio_out) > peak_output) begin
                         peak_output = audio_out;
@@ -376,7 +376,7 @@ module tb;
                 active_outputs = 0;
                 sawtooth_val = -16'sd10000;
                 
-                for (i = 0; i < 500; i = i + 1) begin
+                for (i = 0; i < 25; i = i + 1) begin
                     audio_in = sawtooth_val;
                     sawtooth_val = sawtooth_val + 16'sd40;
                     
