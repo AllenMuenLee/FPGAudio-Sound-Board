@@ -19,7 +19,7 @@ Audio is streamed into the FPGA and fed into all DSP modules simultaneously. A h
 
 ---
 
-## Hardware Architecture & Module Map
+## Repository Architecture
 
 | Directory / File | Description |
 | :--- | :--- |
@@ -35,7 +35,7 @@ Audio is streamed into the FPGA and fed into all DSP modules simultaneously. A h
 
 ---
 
-## 🔌 Physical Board Setup
+## Physical Board Setup
 
 1. Connect the DE1-SoC audio line-in (microphone) and line-out (headphones) to the WM8731 codec jacks.
 2. Use `KEY[0]` to issue a system-wide reset (active-low on the board, inverted internally).
@@ -68,7 +68,7 @@ verilator -sv $(find src -name '*.v') $(find src -name '*.sv') test/tb.sv \
 
 ---
 
-**DE1-SoC Data Flow**
+**DE1-SoC Data Flow Chart**
 ```mermaid
 graph LR
     %% External Inputs & Outputs
@@ -91,7 +91,7 @@ graph LR
         I2S_TX[I2S Transmitter Module]
         
         %% The DSP Core
-        subgraph audio_processor_top.sv
+        subgraph DSP Core (audio_processor_top.sv)
             E0[000: Noise Gate]
             E1[001: High Pitch]
             E2[010: Low Pitch]
