@@ -211,7 +211,7 @@ module tb;
             for (i = 0; i < num_samples; i = i + 1) begin
                 wait_sample_tick();
                 s = $sin(phase);
-                audio_in = $rtoi(amplitude * s);
+                audio_in = 16'$rtoi(amplitude * s);
                 phase = phase + phase_inc;
                 if (phase > 6.28318530718) phase = phase - 6.28318530718;
             end
@@ -232,7 +232,7 @@ module tb;
             for (i = 0; i < num_samples; i = i + 1) begin
                 wait_sample_tick();
                 v = (2.0 * phase) - 1.0; // -1..+1
-                audio_in = $rtoi(amplitude * v);
+                audio_in = 16'$rtoi(amplitude * v);
                 phase = phase + phase_inc;
                 if (phase >= 1.0) phase = phase - 1.0;
             end
