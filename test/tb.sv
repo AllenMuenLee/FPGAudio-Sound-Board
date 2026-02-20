@@ -297,7 +297,7 @@ module tb;
             sine_value = $sin(phase);
             
             // Scale to 16-bit audio range
-            audio_in = $rtoi(amplitude * sine_value);
+            audio_in = $signed($rtoi(amplitude * sine_value))[15:0];
             
             // Increment phase for next sample
             phase = phase + phase_increment;
