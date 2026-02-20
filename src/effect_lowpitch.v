@@ -20,7 +20,7 @@
 //   - 2× period of high pitch effect for symmetrical octave shift
 //
 // ============================================================================
-
+`timescale 1ns/1ps
 module low_pitch_effect (
     input  wire        clk,          // System clock
     input  wire        reset,        // Active-high synchronous reset
