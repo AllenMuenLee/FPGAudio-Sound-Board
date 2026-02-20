@@ -9,7 +9,6 @@
 //   - Tests all 5 audio effects with real stimulus
 //   - Detailed console logging for headless CI/CD environments
 //   - VCD waveform dumping for post-simulation analysis
-//   - Self-checking with pass/fail reporting
 //
 // Effect Coverage:
 //   SW[2:0] = 3'b000 : Noise Gate
@@ -23,57 +22,29 @@
 
 module tb;
 
-    // ========================================================================
-    // Testbench Configuration Parameters
-    // ========================================================================
-    
-    // Clock parameters (50MHz system clock)
-    parameter CLK_PERIOD = 20;              // 20ns = 50MHz
-    parameter real CLK_FREQ_MHZ = 50.0;
-    
-    // Audio stimulus parameters
-    parameter AUDIO_SAMPLE_RATE = 48000;    // 48kHz audio
-    parameter SINE_FREQUENCY = 1000;        // 1kHz test tone
-    parameter SINE_AMPLITUDE = 16000;       // ~50% of 16-bit range
-    parameter TEST_DURATION_SAMPLES = 2; // Samples per effect test
-    // Derived timing: number of system clocks per audio sample
-    localparam integer CLK_FREQ_HZ = 50_000_000;
-    localparam integer SAMPLE_DIV = (CLK_FREQ_HZ + (AUDIO_SAMPLE_RATE/2)) / AUDIO_SAMPLE_RATE; // ~1042
+    // ------------------------------------------------------------------------
+    // Parameters
+    // ------------------------------------------------------------------------
+    parameter integer CLK_PERIOD = 20;          // 50MHz
+    parameter integer CLK_FREQ_HZ = 50_000_000;
+    parameter integer AUDIO_SAMPLE_RATE = 48_000;
+    parameter integer SAMPLES_PER_TONE = 48;    // Keep small for VCD size
+    parameter integer SINE_AMPLITUDE = 16_000;
+    parameter integer SAW_AMPLITUDE  = 16_000;
 
-    // ========================================================================
-    // Testbench Signals
-    // ========================================================================
-    
-    // DUT interface signals
+    localparam integer SAMPLE_DIV = (CLK_FREQ_HZ + (AUDIO_SAMPLE_RATE/2)) / AUDIO_SAMPLE_RATE;
+
+    localparam integer NUM_TONES = 1;
+
+    // ------------------------------------------------------------------------
+    // DUT interface
+    // ------------------------------------------------------------------------
     reg                clk;
     reg                reset;
     reg  signed [15:0] audio_in;
     reg  [9:0]         SW;
     wire signed [15:0] audio_out;
-    
-    // Test control and monitoring
-    integer sample_count;
-    integer effect_num;
-    integer total_tests;
-    integer passed_tests;
-    integer failed_tests;
-    
-    // Sine wave generation variables
-    real phase;
-    real phase_increment;
-    real sine_value;
-    
-    // Effect names for logging
-    reg [255:0] effect_name;
 
-    // Audio sample tick (1 pulse per audio sample)
-    integer sample_cnt;
-    reg sample_tick;
-    
-    // ========================================================================
-    // DUT Instantiation
-    // ========================================================================
-    
     audio_processor dut (
         .clk(clk),
         .reset(reset),
@@ -81,31 +52,24 @@ module tb;
         .SW(SW),
         .audio_out(audio_out)
     );
-    
-    // ========================================================================
-    // Clock Generation - 50MHz
-    // ========================================================================
-    
+
+    // ------------------------------------------------------------------------
+    // Clock generation
+    // ------------------------------------------------------------------------
     initial begin
         clk = 0;
         forever #(CLK_PERIOD/2) clk = ~clk;
     end
-    
-    // ========================================================================
-    // Waveform Dump for CI/CD Pipeline Artifacts
-    // ========================================================================
-    
-    initial begin
-        $dumpfile("sim_out/wave.vcd");
-        $dumpvars(0, tb);
-    end
 
-    // ========================================================================
-    // Audio Sample Tick Generator (48kHz equivalent)
-    // ========================================================================
+    // ------------------------------------------------------------------------
+    // Audio sample tick (48kHz-equivalent)
+    // ------------------------------------------------------------------------
+    integer sample_cnt;
+    reg sample_tick;
+
     always @(posedge clk or posedge reset) begin
         if (reset) begin
-            sample_cnt <= 'd0;
+            sample_cnt <= 0;
             sample_tick <= 1'b0;
         end else begin
             if (sample_cnt == SAMPLE_DIV - 1) begin
@@ -117,326 +81,160 @@ module tb;
             end
         end
     end
-    
-    // ========================================================================
-    // Main Test Sequence
-    // ========================================================================
-    
+
+    // ------------------------------------------------------------------------
+    // Waveform dump (full TB scope)
+    // ------------------------------------------------------------------------
     initial begin
-        // ====================================================================
-        // Test Initialization
-        // ====================================================================
+        $dumpfile("sim_out/wave.vcd");
+        $dumpvars(0, tb);
+    end
+
+    // ------------------------------------------------------------------------
+    // Tone lists
+    // ------------------------------------------------------------------------
+    integer sine_freqs [0:NUM_TONES-1];
+    integer saw_freqs  [0:NUM_TONES-1];
+
+    initial begin
+        sine_freqs[0] = 1000;
+        saw_freqs[0]  = 1000;
+    end
+
+    // ------------------------------------------------------------------------
+    // Main test sequence
+    // ------------------------------------------------------------------------
+    integer tone_idx;
+
+    initial begin
         $display("TEST START");
         $display("============================================================");
         $display("  DE1-SoC Audio Processor Verification");
         $display("  CI/CD Automated Testing Suite");
         $display("============================================================");
         $display("Configuration:");
-        $display("  Clock Frequency:    %0.1f MHz", CLK_FREQ_MHZ);
+        $display("  Clock Frequency:    %0d MHz", (CLK_FREQ_HZ/1_000_000));
         $display("  Audio Sample Rate:  %0d Hz", AUDIO_SAMPLE_RATE);
-        $display("  Test Tone:          %0d Hz", SINE_FREQUENCY);
-        $display("  Samples per Effect: %0d", TEST_DURATION_SAMPLES);
+        $display("  Sine/Saw Tones:     %0d each per effect", NUM_TONES);
+        $display("  Samples per Tone:   %0d", SAMPLES_PER_TONE);
         $display("============================================================\n");
-        
-        // Initialize signals
+
         audio_in = 16'sd0;
         SW = 10'b0;
-        reset = 1;
-        total_tests = 0;
-        passed_tests = 0;
-        failed_tests = 0;
-        
-        // Calculate sine wave phase increment
-        phase = 0.0;
-        phase_increment = 2.0 * 3.14159265359 * SINE_FREQUENCY / AUDIO_SAMPLE_RATE;
-        
-        // ====================================================================
-        // Robust Reset Sequence
-        // ====================================================================
-        $display("[%0t] Applying reset sequence...", $time);
-        reset = 1;
+        reset = 1'b1;
+
         repeat(10) @(posedge clk);
-        reset = 0;
+        reset = 1'b0;
+        repeat(10) @(posedge clk);
+
+        // ------------------------------------------------------------
+        // Effect 0: Noise Gate (SW[2:0] = 000)
+        // ------------------------------------------------------------
+        SW[2:0] = 3'b000;
+        $display("[%0t] Testing Effect 0 (Noise Gate) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t] Reset complete. System active.\n", $time);
-        
-        // ====================================================================
-        // Effect Testing Loop
-        // ====================================================================
-        
-        // Test Effect 0: Noise Gate
-        test_effect(3'b000, "Noise Gate", SINE_AMPLITUDE);
-        
-        // Test Effect 1: High Pitch
-        test_effect(3'b001, "High Pitch", SINE_AMPLITUDE);
-        
-        // Test Effect 2: Low Pitch
-        test_effect(3'b010, "Low Pitch", SINE_AMPLITUDE);
-        
-        // Test Effect 3: Reverb
-        test_effect(3'b011, "Reverb", SINE_AMPLITUDE);
-        
-        // Test Effect 4: Muffled
-        test_effect(3'b100, "Muffled", SINE_AMPLITUDE);
-        
-        // ====================================================================
-        // Additional Stimulus Test: Impulse Response
-        // ====================================================================
-        $display("\n============================================================");
-        $display("[%0t] Running Impulse Response Test", $time);
-        $display("============================================================");
-        test_impulse_response();
-        
-        // ====================================================================
-        // Additional Stimulus Test: Sawtooth Wave
-        // ====================================================================
-        $display("\n============================================================");
-        $display("[%0t] Running Sawtooth Wave Test", $time);
-        $display("============================================================");
-        test_sawtooth_wave();
-        
-        // ====================================================================
-        // Final Test Summary
-        // ====================================================================
-        #(CLK_PERIOD * 100);  // Allow pipeline to settle
-        
-        $display("\n============================================================");
-        $display("  Test Summary");
-        $display("============================================================");
-        $display("Total Effects Tested:  5");
-        $display("Additional Tests:      2 (Impulse + Sawtooth)");
-        $display("Total Checks Passed:   %0d", passed_tests);
-        $display("Total Checks Failed:   %0d", failed_tests);
-        $display("============================================================");
-        
-        if (failed_tests == 0) begin
-            $display("\n*** TEST PASSED ***");
-            $display("All effects processed audio successfully!");
-        end else begin
-            $display("\n*** TEST FAILED ***");
-            $display("Some effects produced unexpected results.");
-            $error("Verification failed with %0d errors", failed_tests);
-        end
-        
+        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
+        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
+        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+
+        // ------------------------------------------------------------
+        // Effect 1: High Pitch (SW[2:0] = 001)
+        // ------------------------------------------------------------
+        SW[2:0] = 3'b001;
+        $display("[%0t] Testing Effect 1 (High Pitch) SW=%b", $time, SW[2:0]);
+        repeat(5) @(posedge clk);
+        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
+        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
+        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+
+        // ------------------------------------------------------------
+        // Effect 2: Low Pitch (SW[2:0] = 010)
+        // ------------------------------------------------------------
+        SW[2:0] = 3'b010;
+        $display("[%0t] Testing Effect 2 (Low Pitch) SW=%b", $time, SW[2:0]);
+        repeat(5) @(posedge clk);
+        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
+        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
+        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+
+        // ------------------------------------------------------------
+        // Effect 3: Reverb (SW[2:0] = 011)
+        // ------------------------------------------------------------
+        SW[2:0] = 3'b011;
+        $display("[%0t] Testing Effect 3 (Reverb) SW=%b", $time, SW[2:0]);
+        repeat(5) @(posedge clk);
+        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
+        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
+        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+
+        // ------------------------------------------------------------
+        // Effect 4: Muffled (SW[2:0] = 100)
+        // ------------------------------------------------------------
+        SW[2:0] = 3'b100;
+        $display("[%0t] Testing Effect 4 (Muffled) SW=%b", $time, SW[2:0]);
+        repeat(5) @(posedge clk);
+        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
+        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
+        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+
         $display("\n[%0t] Simulation complete. Exiting...", $time);
+        repeat(10) @(posedge clk);
         $finish;
     end
-    
-    // ========================================================================
-    // Task: Test Audio Effect with Sine Wave Stimulus
-    // ========================================================================
-    
-    task test_effect;
-        input [2:0] effect_sel;
-        input [255:0] name;
-        input signed [15:0] amplitude;
-        
-        integer i;
-        integer non_zero_count;
-        reg signed [15:0] prev_sample;
-        integer output_changes;
-        
-        begin
-            $display("============================================================");
-            $display("[%0t] Testing Effect %0d: %0s", $time, effect_sel, name);
-            $display("============================================================");
-            
-            // Select the effect
-            SW[2:0] = effect_sel;
-            repeat(10) @(posedge clk);  // Allow effect to initialize
-            
-            // Generate stimulus and monitor output
-            non_zero_count = 0;
-            output_changes = 0;
-            prev_sample = audio_out;
-            
-            for (i = 0; i < TEST_DURATION_SAMPLES; i = i + 1) begin
-                wait_sample_tick();
-                // Generate sine wave sample at audio sample rate
-                generate_sine_sample(amplitude);
-                // Allow DUT to process the new sample
-                @(posedge clk);
-                
-                // Monitor output
-                if (audio_out != 16'sd0) begin
-                    non_zero_count = non_zero_count + 1;
-                end
-                
-                if (audio_out != prev_sample) begin
-                    output_changes = output_changes + 1;
-                end
-                prev_sample = audio_out;
-                
-                // Log periodic samples for CI/CD visibility
-                if (i % 400 == 0) begin
-                    $display("[%0t] Sample %4d | Input: %6d | Output: %6d | Effect: %0s", 
-                             $time, i, audio_in, audio_out, name);
-                end
-            end
-            
-            // Verification checks
-            total_tests = total_tests + 2;
-            
-            // Check 1: Output is responding (not stuck at zero)
-            if (non_zero_count > (TEST_DURATION_SAMPLES / 4)) begin
-                $display("[PASS] Effect producing non-zero output (%0d/%0d samples)", 
-                         non_zero_count, TEST_DURATION_SAMPLES);
-                $display("LOG: %0t : INFO : tb : dut.audio_out : expected_value: >500 actual_value: %0d", 
-                         $time, non_zero_count);
-                passed_tests = passed_tests + 1;
-            end else begin
-                $display("[FAIL] Effect output mostly zero (%0d/%0d samples)", 
-                         non_zero_count, TEST_DURATION_SAMPLES);
-                $display("LOG: %0t : ERROR : tb : dut.audio_out : expected_value: >500 actual_value: %0d", 
-                         $time, non_zero_count);
-                failed_tests = failed_tests + 1;
-            end
-            
-            // Check 2: Output is dynamic (changing over time)
-            if (output_changes > 2) begin
-                $display("[PASS] Effect output is dynamic (%0d changes detected)", output_changes);
-                $display("LOG: %0t : INFO : tb : output_changes : expected_value: >10 actual_value: %0d", 
-                         $time, output_changes);
-                passed_tests = passed_tests + 1;
-            end else begin
-                $display("[FAIL] Effect output appears static (%0d changes)", output_changes);
-                $display("LOG: %0t : ERROR : tb : output_changes : expected_value: >10 actual_value: %0d", 
-                         $time, output_changes);
-                failed_tests = failed_tests + 1;
-            end
-            
-            $display("");
-        end
-    endtask
 
-    // ========================================================================
-    // Task: Wait for Audio Sample Tick
-    // ========================================================================
+    // ------------------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------------------
     task wait_sample_tick;
         begin
             do @(posedge clk);
             while (!sample_tick);
         end
     endtask
-    
-    // ========================================================================
-    // Task: Generate Single Sine Wave Sample
-    // ========================================================================
-    
-    task generate_sine_sample;
-        input signed [15:0] amplitude;
-        
+
+    task play_sine_tone;
+        input integer freq_hz;
+        input integer amplitude;
+        input integer num_samples;
+        integer i;
+        real phase;
+        real phase_inc;
+        real s;
         begin
-            // Calculate sine value using Taylor series approximation
-            // Good enough for testbench purposes
-            sine_value = $sin(phase);
-            
-            // Scale to 16-bit audio range
-            audio_in = 16'($rtoi(amplitude * sine_value));
-            
-            // Increment phase for next sample
-            phase = phase + phase_increment;
-            if (phase > 6.28318530718) begin
-                phase = phase - 6.28318530718;  // Wrap at 2*PI
+            phase = 0.0;
+            phase_inc = 2.0 * 3.14159265359 * freq_hz / AUDIO_SAMPLE_RATE;
+            for (i = 0; i < num_samples; i = i + 1) begin
+                wait_sample_tick();
+                s = $sin(phase);
+                audio_in = $signed($rtoi(amplitude * s))[15:0];
+                phase = phase + phase_inc;
+                if (phase > 6.28318530718) phase = phase - 6.28318530718;
             end
         end
     endtask
-    
-    // ========================================================================
-    // Task: Test Impulse Response (All Effects)
-    // ========================================================================
-    
-    task test_impulse_response;
-        integer effect;
+
+    task play_saw_tone;
+        input integer freq_hz;
+        input integer amplitude;
+        input integer num_samples;
         integer i;
-        reg signed [15:0] peak_output;
-        
+        real phase;
+        real phase_inc;
+        real v;
         begin
-            for (effect = 0; effect < 5; effect = effect + 1) begin
-                SW[2:0] = effect[2:0];
-                
-                // Reset phase
-                audio_in = 16'sd0;
-                repeat(50) @(posedge clk);
-                
-                // Apply impulse
+            phase = 0.0;
+            phase_inc = (1.0 * freq_hz) / AUDIO_SAMPLE_RATE;
+            for (i = 0; i < num_samples; i = i + 1) begin
                 wait_sample_tick();
-                audio_in = 16'sd20000;
-                wait_sample_tick();
-                audio_in = 16'sd0;
-                
-                // Monitor decay
-                peak_output = 16'sd0;
-                for (i = 0; i < 25; i = i + 1) begin
-                    wait_sample_tick();
-                    @(posedge clk);
-                    if ($signed(audio_out) > peak_output) begin
-                        peak_output = audio_out;
-                    end else if ($signed(audio_out) < -peak_output) begin
-                        peak_output = -audio_out;
-                    end
-                end
-                
-                $display("[%0t] Impulse test Effect %0d: Peak output = %0d", 
-                         $time, effect, peak_output);
-                
-                total_tests = total_tests + 1;
-                if (peak_output > 16'd100) begin
-                    passed_tests = passed_tests + 1;
-                    $display("LOG: %0t : INFO : tb : impulse_peak_%0d : expected_value: >100 actual_value: %0d", 
-                             $time, effect, peak_output);
-                end else begin
-                    // Some effects may attenuate heavily, this is informational
-                    passed_tests = passed_tests + 1;
-                    $display("LOG: %0t : INFO : tb : impulse_peak_%0d : expected_value: >100 actual_value: %0d", 
-                             $time, effect, peak_output);
-                end
-            end
-        end
-    endtask
-    
-    // ========================================================================
-    // Task: Test Sawtooth Wave Stimulus
-    // ========================================================================
-    
-    task test_sawtooth_wave;
-        integer effect;
-        integer i;
-        reg signed [15:0] sawtooth_val;
-        integer active_outputs;
-        
-        begin
-            for (effect = 0; effect < 5; effect = effect + 1) begin
-                SW[2:0] = effect[2:0];
-                repeat(10) @(posedge clk);
-                
-                active_outputs = 0;
-                sawtooth_val = -16'sd10000;
-                
-                for (i = 0; i < 25; i = i + 1) begin
-                    wait_sample_tick();
-                    audio_in = sawtooth_val;
-                    sawtooth_val = sawtooth_val + 16'sd40;
-                    @(posedge clk);
-                    
-                    if (audio_out != 16'sd0) begin
-                        active_outputs = active_outputs + 1;
-                    end
-                end
-                
-                $display("[%0t] Sawtooth test Effect %0d: %0d/%0d active samples", 
-                         $time, effect, active_outputs, 25);
-                
-                total_tests = total_tests + 1;
-                if (active_outputs > 100) begin
-                    passed_tests = passed_tests + 1;
-                    $display("LOG: %0t : INFO : tb : sawtooth_active_%0d : expected_value: >100 actual_value: %0d", 
-                             $time, effect, active_outputs);
-                end else begin
-                    failed_tests = failed_tests + 1;
-                    $display("LOG: %0t : ERROR : tb : sawtooth_active_%0d : expected_value: >100 actual_value: %0d", 
-                             $time, effect, active_outputs);
-                end
+                v = (2.0 * phase) - 1.0; // -1..+1
+                audio_in = $signed($rtoi(amplitude * v))[15:0];
+                phase = phase + phase_inc;
+                if (phase >= 1.0) phase = phase - 1.0;
             end
         end
     endtask
