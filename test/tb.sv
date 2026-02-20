@@ -92,7 +92,19 @@ module tb;
         $dumpfile("sim_out/wave.vcd");
         $dumpvars(0, tb);
     end
-    
+
+    // ========================================================================
+    // Waveform Dump Saver (Prevents Wavedrom Crash)
+    // ========================================================================
+    initial begin
+        // Let it record the reset phase so Wavedrom has something to draw
+        #(CLK_PERIOD * 50); 
+        
+        // Pause the VCD recording! 
+        // The simulation math will keep running, but Wavedrom won't get overloaded.
+        $dumpoff; 
+    end
+
     // ========================================================================
     // Main Test Sequence
     // ========================================================================
