@@ -25,14 +25,15 @@ module tb;
     // ------------------------------------------------------------------------
     // Parameters
     // ------------------------------------------------------------------------
-    parameter integer CLK_PERIOD = 20;          // 50MHz
-    parameter integer CLK_FREQ_HZ = 50_000_000;
-    parameter integer AUDIO_SAMPLE_RATE = 48_000;
-    parameter integer SAMPLES_PER_TONE = 48;    // Keep small for VCD size
+    // Fast demo: very short sim time, >= 2 cycles per tone
+    parameter integer CLK_PERIOD = 2;                // 2ns = 500MHz
+    parameter integer CLK_FREQ_HZ = 500_000_000;
+    parameter integer AUDIO_SAMPLE_RATE = 500_000_000; // 1 sample per clock
+    parameter integer SAMPLES_PER_TONE = 50;         // 2 cycles at 20MHz
     parameter integer SINE_AMPLITUDE = 16_000;
     parameter integer SAW_AMPLITUDE  = 16_000;
 
-    localparam integer SAMPLE_DIV = (CLK_FREQ_HZ + (AUDIO_SAMPLE_RATE/2)) / AUDIO_SAMPLE_RATE;
+    localparam integer SAMPLE_DIV = 1;
 
     localparam integer NUM_TONES = 1;
 
@@ -62,7 +63,7 @@ module tb;
     end
 
     // ------------------------------------------------------------------------
-    // Audio sample tick (48kHz-equivalent)
+    // Audio sample tick (1 sample per clock)
     // ------------------------------------------------------------------------
     integer sample_cnt;
     reg sample_tick;
@@ -97,8 +98,8 @@ module tb;
     integer saw_freqs  [0:NUM_TONES-1];
 
     initial begin
-        sine_freqs[0] = 1000;
-        saw_freqs[0]  = 1000;
+        sine_freqs[0] = 20_000_000;
+        saw_freqs[0]  = 20_000_000;
     end
 
     // ------------------------------------------------------------------------
