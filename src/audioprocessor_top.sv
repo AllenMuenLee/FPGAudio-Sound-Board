@@ -14,7 +14,7 @@
 // Instantiates all effect modules from main1.sv and selects between them
 // All effects process in parallel, output mux selects based on SW[2:0]
 // ============================================================================
-
+`timescale 1ns/1ps
 module audio_processor (
     input             clk,
     input             reset,
