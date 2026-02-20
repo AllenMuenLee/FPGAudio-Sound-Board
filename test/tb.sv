@@ -36,7 +36,10 @@ module tb;
     parameter SINE_FREQUENCY = 1000;        // 1kHz test tone
     parameter SINE_AMPLITUDE = 16000;       // ~50% of 16-bit range
     parameter TEST_DURATION_SAMPLES = 2; // Samples per effect test
-    
+    // Derived timing: number of system clocks per audio sample
+    localparam integer CLK_FREQ_HZ = 50_000_000;
+    localparam integer SAMPLE_DIV = (CLK_FREQ_HZ + (AUDIO_SAMPLE_RATE/2)) / AUDIO_SAMPLE_RATE; // ~1042
+
     // ========================================================================
     // Testbench Signals
     // ========================================================================
@@ -62,6 +65,10 @@ module tb;
     
     // Effect names for logging
     reg [255:0] effect_name;
+
+    // Audio sample tick (1 pulse per audio sample)
+    reg [$clog2(SAMPLE_DIV):0] sample_cnt;
+    reg sample_tick;
     
     // ========================================================================
     // DUT Instantiation
@@ -91,6 +98,24 @@ module tb;
     initial begin
         $dumpfile("sim_out/wave.vcd");
         $dumpvars(0, tb);
+    end
+
+    // ========================================================================
+    // Audio Sample Tick Generator (48kHz equivalent)
+    // ========================================================================
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            sample_cnt <= 'd0;
+            sample_tick <= 1'b0;
+        end else begin
+            if (sample_cnt == SAMPLE_DIV - 1) begin
+                sample_cnt <= 'd0;
+                sample_tick <= 1'b1;
+            end else begin
+                sample_cnt <= sample_cnt + 1'd1;
+                sample_tick <= 1'b0;
+            end
+        end
     end
     
     // ========================================================================
@@ -226,9 +251,10 @@ module tb;
             prev_sample = audio_out;
             
             for (i = 0; i < TEST_DURATION_SAMPLES; i = i + 1) begin
-                // Generate sine wave sample
+                wait_sample_tick();
+                // Generate sine wave sample at audio sample rate
                 generate_sine_sample(amplitude);
-                
+                // Allow DUT to process the new sample
                 @(posedge clk);
                 
                 // Monitor output
@@ -282,6 +308,16 @@ module tb;
             $display("");
         end
     endtask
+
+    // ========================================================================
+    // Task: Wait for Audio Sample Tick
+    // ========================================================================
+    task wait_sample_tick;
+        begin
+            do @(posedge clk);
+            while (!sample_tick);
+        end
+    endtask
     
     // ========================================================================
     // Task: Generate Single Sine Wave Sample
@@ -324,13 +360,15 @@ module tb;
                 repeat(50) @(posedge clk);
                 
                 // Apply impulse
+                wait_sample_tick();
                 audio_in = 16'sd20000;
-                @(posedge clk);
+                wait_sample_tick();
                 audio_in = 16'sd0;
                 
                 // Monitor decay
                 peak_output = 16'sd0;
-                for (i = 0; i < (25 * 1042); i = i + 1) begin
+                for (i = 0; i < 25; i = i + 1) begin
+                    wait_sample_tick();
                     @(posedge clk);
                     if ($signed(audio_out) > peak_output) begin
                         peak_output = audio_out;
@@ -376,9 +414,9 @@ module tb;
                 sawtooth_val = -16'sd10000;
                 
                 for (i = 0; i < 25; i = i + 1) begin
+                    wait_sample_tick();
                     audio_in = sawtooth_val;
                     sawtooth_val = sawtooth_val + 16'sd40;
-                    
                     @(posedge clk);
                     
                     if (audio_out != 16'sd0) begin
@@ -387,7 +425,7 @@ module tb;
                 end
                 
                 $display("[%0t] Sawtooth test Effect %0d: %0d/%0d active samples", 
-                         $time, effect, active_outputs, 500);
+                         $time, effect, active_outputs, 25);
                 
                 total_tests = total_tests + 1;
                 if (active_outputs > 100) begin
