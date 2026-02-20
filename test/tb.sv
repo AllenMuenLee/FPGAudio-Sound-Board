@@ -25,18 +25,18 @@ module tb;
     // ------------------------------------------------------------------------
     // Parameters
     // ------------------------------------------------------------------------
-    // Fast demo: very short sim time, >= 2 cycles per tone
-    parameter integer CLK_PERIOD = 2;                // 2ns = 500MHz
-    parameter integer CLK_FREQ_HZ = 500_000_000;
-    parameter integer AUDIO_SAMPLE_RATE = 500_000_000; // 1 sample per clock
-    parameter integer SAMPLES_PER_TONE = 50;         // 2 cycles at 20MHz
+    // Realistic mode: 50MHz clock, 48kHz audio sampling
+    parameter integer CLK_PERIOD = 20;               // 20ns = 50MHz
+    parameter integer CLK_FREQ_HZ = 50_000_000;
+    parameter integer AUDIO_SAMPLE_RATE = 48_000;    // 48kHz
+    parameter integer SAMPLES_PER_TONE = 200;        // ~4.17ms per tone
     parameter integer SINE_AMPLITUDE = 16_000;
     parameter integer SAW_AMPLITUDE  = 16_000;
 
-    localparam integer SAMPLE_DIV = 1;
+    localparam integer SAMPLE_DIV = (CLK_FREQ_HZ + (AUDIO_SAMPLE_RATE/2)) / AUDIO_SAMPLE_RATE;
 
-    localparam integer SINE_FREQ_HZ = 20_000_000;
-    localparam integer SAW_FREQ_HZ  = 20_000_000;
+    localparam integer SINE_FREQ_HZ = 1000;
+    localparam integer SAW_FREQ_HZ  = 1000;
 
     // ------------------------------------------------------------------------
     // DUT interface
@@ -64,7 +64,7 @@ module tb;
     end
 
     // ------------------------------------------------------------------------
-    // Audio sample tick (1 sample per clock)
+    // Audio sample tick (48kHz-equivalent)
     // ------------------------------------------------------------------------
     integer sample_cnt;
     reg sample_tick;
