@@ -4,100 +4,27 @@ TEST START
   CI/CD Automated Testing Suite
 ============================================================
 Configuration:
-  Clock Frequency:    50.0 MHz
+  Clock Frequency:    50 MHz
   Audio Sample Rate:  48000 Hz
-  Test Tone:          1000 Hz
-  Samples per Effect: 2
+  Sine/Saw Tones:     1 each per effect
+  Samples per Tone:   48
 ============================================================
 
-[0] Applying reset sequence...
-[290000] Reset complete. System active.
+[390000] Testing Effect 0 (Noise Gate) SW=000
+[490000]   Sine: 1000 Hz
+[1000510000]   Saw : 1000 Hz
+[2000830000] Testing Effect 1 (High Pitch) SW=001
+[2000930000]   Sine: 1000 Hz
+[3001150000]   Saw : 1000 Hz
+[4001470000] Testing Effect 2 (Low Pitch) SW=010
+[4001570000]   Sine: 1000 Hz
+[5001790000]   Saw : 1000 Hz
+[6002110000] Testing Effect 3 (Reverb) SW=011
+[6002210000]   Sine: 1000 Hz
+[7002430000]   Saw : 1000 Hz
+[8002750000] Testing Effect 4 (Muffled) SW=100
+[8002850000]   Sine: 1000 Hz
+[9003070000]   Saw : 1000 Hz
 
-============================================================
-[290000] Testing Effect 0: Noise Gate
-============================================================
-[21050000] Sample    0 | Input:      0 | Output:      0 | Effect: Noise Gate
-[FAIL] Effect output mostly zero (0/2 samples)
-LOG: 41890000 : ERROR : tb : dut.audio_out : expected_value: >500 actual_value: 0
-[FAIL] Effect output appears static (0 changes)
-LOG: 41890000 : ERROR : tb : output_changes : expected_value: >10 actual_value: 0
-
-============================================================
-[41890000] Testing Effect 1: High Pitch
-============================================================
-[62730000] Sample    0 | Input:   4141 | Output:   2088 | Effect: High Pitch
-[PASS] Effect producing non-zero output (1/2 samples)
-LOG: 83570000 : INFO : tb : dut.audio_out : expected_value: >500 actual_value: 1
-[FAIL] Effect output appears static (1 changes)
-LOG: 83570000 : ERROR : tb : output_changes : expected_value: >10 actual_value: 1
-
-============================================================
-[83570000] Testing Effect 2: Low Pitch
-============================================================
-[104410000] Sample    0 | Input:   8000 | Output:      0 | Effect: Low Pitch
-[FAIL] Effect output mostly zero (0/2 samples)
-LOG: 125250000 : ERROR : tb : dut.audio_out : expected_value: >500 actual_value: 0
-[FAIL] Effect output appears static (0 changes)
-LOG: 125250000 : ERROR : tb : output_changes : expected_value: >10 actual_value: 0
-
-============================================================
-[125250000] Testing Effect 3: Reverb
-============================================================
-[146090000] Sample    0 | Input:  11313 | Output:  12947 | Effect: Reverb
-[PASS] Effect producing non-zero output (2/2 samples)
-LOG: 166930000 : INFO : tb : dut.audio_out : expected_value: >500 actual_value: 2
-[FAIL] Effect output appears static (2 changes)
-LOG: 166930000 : ERROR : tb : output_changes : expected_value: >10 actual_value: 2
-
-============================================================
-[166930000] Testing Effect 4: Muffled
-============================================================
-[187770000] Sample    0 | Input:  13856 | Output:  12693 | Effect: Muffled
-[PASS] Effect producing non-zero output (2/2 samples)
-LOG: 208610000 : INFO : tb : dut.audio_out : expected_value: >500 actual_value: 2
-[FAIL] Effect output appears static (1 changes)
-LOG: 208610000 : ERROR : tb : output_changes : expected_value: >10 actual_value: 1
-
-
-============================================================
-[208610000] Running Impulse Response Test
-============================================================
-[771290000] Impulse test Effect 0: Peak output = 0
-LOG: 771290000 : INFO : tb : impulse_peak_0 : expected_value: >100 actual_value: 0
-[1333970000] Impulse test Effect 1: Peak output = 0
-LOG: 1333970000 : INFO : tb : impulse_peak_1 : expected_value: >100 actual_value: 0
-[1896650000] Impulse test Effect 2: Peak output = 20000
-LOG: 1896650000 : INFO : tb : impulse_peak_2 : expected_value: >100 actual_value: 20000
-[2459330000] Impulse test Effect 3: Peak output = 390
-LOG: 2459330000 : INFO : tb : impulse_peak_3 : expected_value: >100 actual_value: 390
-[3022010000] Impulse test Effect 4: Peak output = 0
-LOG: 3022010000 : INFO : tb : impulse_peak_4 : expected_value: >100 actual_value: 0
-
-============================================================
-[3022010000] Running Sawtooth Wave Test
-============================================================
-[3543010000] Sawtooth test Effect 0: 24/25 active samples
-LOG: 3543010000 : ERROR : tb : sawtooth_active_0 : expected_value: >100 actual_value: 24
-[4064010000] Sawtooth test Effect 1: 25/25 active samples
-LOG: 4064010000 : ERROR : tb : sawtooth_active_1 : expected_value: >100 actual_value: 25
-[4585010000] Sawtooth test Effect 2: 25/25 active samples
-LOG: 4585010000 : ERROR : tb : sawtooth_active_2 : expected_value: >100 actual_value: 25
-[5106010000] Sawtooth test Effect 3: 25/25 active samples
-LOG: 5106010000 : ERROR : tb : sawtooth_active_3 : expected_value: >100 actual_value: 25
-[5627010000] Sawtooth test Effect 4: 25/25 active samples
-LOG: 5627010000 : ERROR : tb : sawtooth_active_4 : expected_value: >100 actual_value: 25
-
-============================================================
-  Test Summary
-============================================================
-Total Effects Tested:  5
-Additional Tests:      2 (Impulse + Sawtooth)
-Total Checks Passed:   8
-Total Checks Failed:   12
-============================================================
-
-*** TEST FAILED ***
-Some effects produced unexpected results.
-[5629010000] %Error: tb.sv:218: Assertion failed in TOP.tb: Verification failed with 12 errors
-%Error: test/tb.sv:218: Verilog $stop
-Aborting...
+[10003390000] Simulation complete. Exiting...
+- test/tb.sv:187: Verilog $finish
