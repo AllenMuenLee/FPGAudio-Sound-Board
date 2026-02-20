@@ -7,7 +7,6 @@
 // Status: VU meter displays audio level on LEDR[9:0]
 // ============================================================================
 
-`include "main.sv"
 
 // ============================================================================
 // Audio Processor Module - Effect Selector
