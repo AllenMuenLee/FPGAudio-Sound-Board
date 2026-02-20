@@ -11,7 +11,7 @@ def apply_double_muffled(input_file, output_file):
     audio_in = data.astype(np.float32)
     processed_audio = np.zeros_like(audio_in)
 
-    alpha = 0.05   # smaller = more muffled
+    alpha = 0.01   # smaller = more muffled
 
     # Filter states
     y1 = 0.0
@@ -35,4 +35,4 @@ def apply_double_muffled(input_file, output_file):
     final_audio = np.clip(processed_audio, -32768, 32767).astype(np.int16)
 
     wavfile.write(output_file, fs, final_audio)
-    print("Muffled effect applied.")
+    print("Muffled effect applied")
