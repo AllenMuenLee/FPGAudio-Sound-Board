@@ -6,7 +6,8 @@ TEST START
 Configuration:
   Clock Frequency:    500 MHz
   Audio Sample Rate:  500000000 Hz
-  Sine/Saw Tones:     1 each per effect
+  Sine Tone:          20000000 Hz
+  Saw Tone:           20000000 Hz
   Samples per Tone:   50
 ============================================================
 
@@ -27,4 +28,4 @@ Configuration:
 [989000]   Saw : 20000000 Hz
 
 [1089000] Simulation complete. Exiting...
-- test/tb.sv:188: Verilog $finish
+- test/tb.sv:179: Verilog $finish
