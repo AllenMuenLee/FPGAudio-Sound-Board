@@ -1,51 +1,58 @@
-# DE1-SoC Audio Effects Processor
+# FPGAudio Soundboard: Real-Time DE1-SoC DSP Engine
 
-Real-time stereo audio effects for the DE1-SoC board using the WM8731 codec. The design processes both channels in parallel and lets you select one of five effects with the slide switches. A self-checking SystemVerilog testbench and GitHub Actions flow generate waveforms and logs on every push.
+The FPGAudio Soundboard is a fully custom, hardware-accelerated digital signal processing (DSP) core written in SystemVerilog. Built for the Altera/Intel Cyclone V FPGA on the DE1-SoC development board, this project interfaces directly with the onboard WM8731 audio codec to perform zero-latency, real-time audio manipulation. 
 
-**Effects**
-1. Noise Gate
-2. High Pitch (chipmunk)
-3. Low Pitch (deep voice)
-4. Reverb
-5. Muffled (low-pass)
+Instead of relying on software or soft-core processors, all DSP math and memory management is implemented directly in the RTL fabric, demonstrating highly efficient, parallel hardware architecture.
 
-**Effect Select (SW[2:0])**
-1. `000` Noise Gate
-2. `001` High Pitch
-3. `010` Low Pitch
-4. `011` Reverb
-5. `100` Muffled
+---
 
-**Top-Level Modules**
-1. `src/de1soc_top.sv`: `de1soc_wrapper` for DE1-SoC pinout
-2. `src/audioprocessor_top.sv`: `de1soc_audio_top` system integration and `audio_processor` effect mux
+## Hardware DSP Effects
 
-**Key Source Files**
-1. `src/effect_noisegate.v`
-2. `src/effect_highpitch.v`
-3. `src/effect_lowpitch.v`
-4. `src/effect_reverb.v`
-5. `src/effect_muffled.v`
-6. `src/util_audioclock.v`
-7. `src/util_vumeter.v`
-8. `src/wm8731_i2s_interface.v`
-9. `src/wm8731_config.v`
-10. `src/wm8731_i2c_controller.v`
+Audio is streamed into the FPGA and fed into all DSP modules simultaneously. A hardware multiplexer routes the final processed signal to the DAC based on the physical switch positions.
 
-**Testbench**
-1. `test/tb.sv`
-2. Generates sine, impulse, and sawtooth stimulus
-3. Produces `sim_out/wave.vcd` during simulation
+* **`000` Noise Gate:** Professional dynamic range compression with adjustable threshold, attack, and release logic.
+* **`001` High Pitch (Chipmunk):** Real-time waveform holding using an internal 1042-cycle counter to shift frequencies.
+* **`010` Low Pitch (Deep Voice):** Audio period extension via a 2084-cycle delay buffer.
+* **`011` Reverb:** Spatial depth created using a 512-sample Block RAM (BRAM) delay line and signal mixing.
+* **`100` Muffled (Low-Pass):** Hardware-implemented low-pass filter utilizing parallel sample summation.
+* **`101` to `111` Clean Bypass:** Any other switch combination defaults to a direct pass-through of the raw microphone audio for A/B testing.
 
-**CI Simulation (GitHub Actions)**
-1. On push/PR, runs Verilator on all files in `src/` plus `test/tb.sv`
-2. Saves outputs to `.github/outputs/`:
-3. `sim.log`
-4. `wave.vcd`
-5. `wave.svg`
-6. `wave.json`
+---
 
-**Local Simulation (Verilator)**
+## Hardware Architecture & Module Map
+
+| Directory / File | Description |
+| :--- | :--- |
+| `src/de1soc_top.sv` | Top-level physical pin mapping for the DE1-SoC board. |
+| `src/audioprocessor_top.sv` | System integration and the parallel effect output multiplexer. |
+| `src/effect_*.v` | The five isolated DSP mathematical cores. |
+| `src/wm8731_*.v` | Low-level serial communication drivers (I2C, I2S) for the audio codec. |
+| `src/util_*.v` | System utilities including the 12.5MHz master clock and VU meter. |
+| `test/tb.sv` | SystemVerilog testbench for automated CI/CD verification. |
+| `assets/` | Documentation and architecture images. |
+
+---
+
+## 🔌 Physical Board Setup
+
+1. Connect the DE1-SoC audio line-in (microphone) and line-out (headphones) to the WM8731 codec jacks.
+2. Use `KEY[0]` to issue a system-wide reset (active-low on the board, inverted internally).
+3. Toggle `SW[2:0]` to switch between the live audio effects.
+4. Observe `LEDR[9:0]`, which acts as a hardware VU meter visualizing the processed audio volume with smooth decay logic.
+
+---
+
+## Verification & CI/CD Simulation
+
+This repository enforces strict ASIC-grade verification through automated GitHub Actions. On every push or pull request, Verilator compiles all files in `src/` and runs the comprehensive `test/tb.sv` testbench.
+
+**The Testbench Verifies:**
+* **Stimulus Generation:** Synthesizes 48kHz sine waves, impulse responses, and sawtooth waves to feed the DSP core.
+* **Clock Synchronization:** Accurately models the 1042-cycle delay between the 50MHz system clock and the 48kHz audio ingestion.
+* **Automated Checking:** Validates dynamic output and tests impulse decay across all parallel modules.
+* **Artifact Generation:** Outputs `sim.log`, `wave.vcd`, `wave.svg`, `wave.json` files to `.github/outputs/` for headless waveform rendering.
+
+**To run the simulation locally using Verilator:**
 ```bash
 verilator -sv $(find src -name '*.v') $(find src -name '*.sv') test/tb.sv \
   --top-module tb \
@@ -57,22 +64,9 @@ verilator -sv $(find src -name '*.v') $(find src -name '*.sv') test/tb.sv \
 ./sim_out/Vtb | tee sim.log
 ```
 
-**Hardware Usage**
-1. Connect the DE1-SoC audio line-in/line-out to the WM8731 codec.
-2. Use `KEY[0]` for reset (active-low on the board, inverted internally).
-3. Set `SW[2:0]` to select the effect.
-4. `LEDR[9:0]` displays a VU meter of the processed left channel.
+---
 
-**Repository Structure**
-```text
-src/            Design source (.v/.sv)
-test/           Testbench (tb.sv)
-assets/         README images
-.github/        CI workflows and outputs
-README.md
-```
-
-**DE1-SoC Physical Interface**
+**DE1-SoC Data Flow**
 ```mermaid
 graph LR
     %% External Inputs & Outputs
