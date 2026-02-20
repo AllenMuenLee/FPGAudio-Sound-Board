@@ -11,15 +11,15 @@ Instead of relying on software or soft-core processors, all DSP math and memory 
 Audio is streamed into the FPGA and fed into all DSP modules simultaneously. A hardware multiplexer routes the final processed signal to the DAC based on the physical switch positions.
 
 * **`000` Noise Gate:** Professional dynamic range compression with adjustable threshold, attack, and release logic.
-* **`001` High Pitch (Chipmunk):** Real-time waveform holding using an internal 1042-cycle counter to shift frequencies.
-* **`010` Low Pitch (Deep Voice):** Audio period extension via a 2084-cycle delay buffer.
+* **`001` High Pitch:** Real-time waveform holding using an internal 1042-cycle counter to shift frequencies.
+* **`010` Low Pitch:** Audio period extension via a 2084-cycle delay buffer.
 * **`011` Reverb:** Spatial depth created using a 512-sample Block RAM (BRAM) delay line and signal mixing.
-* **`100` Muffled (Low-Pass):** Hardware-implemented low-pass filter utilizing parallel sample summation.
+* **`100` Muffled:** Hardware-implemented low-pass filter utilizing parallel sample summation.
 * **`101` to `111` Clean Bypass:** Any other switch combination defaults to a direct pass-through of the raw microphone audio for A/B testing.
 
 ---
 
-## Hardware Architecture & Module Map
+## Repository Architecture
 
 | Directory / File | Description |
 | :--- | :--- |
@@ -30,10 +30,12 @@ Audio is streamed into the FPGA and fed into all DSP modules simultaneously. A h
 | `src/util_*.v` | System utilities including the 12.5MHz master clock and VU meter. |
 | `test/tb.sv` | SystemVerilog testbench for automated CI/CD verification. |
 | `assets/` | Documentation and architecture images. |
+| `demo/` | Python audio processing scripts that emulate the Verilog hardware logic for audible hackathon demonstration. |
+| `.github/` | Hackathon CI/CD workflows and automated simulation output storage (do not modify). |
 
 ---
 
-## 🔌 Physical Board Setup
+## Physical Board Setup
 
 1. Connect the DE1-SoC audio line-in (microphone) and line-out (headphones) to the WM8731 codec jacks.
 2. Use `KEY[0]` to issue a system-wide reset (active-low on the board, inverted internally).
@@ -66,7 +68,7 @@ verilator -sv $(find src -name '*.v') $(find src -name '*.sv') test/tb.sv \
 
 ---
 
-**DE1-SoC Data Flow**
+**DE1-SoC Data Flow Chart**
 ```mermaid
 graph LR
     %% External Inputs & Outputs
@@ -89,7 +91,7 @@ graph LR
         I2S_TX[I2S Transmitter Module]
         
         %% The DSP Core
-        subgraph audio_processor_top.sv
+        subgraph DSP Core (audio_processor_top.sv)
             E0[000: Noise Gate]
             E1[001: High Pitch]
             E2[010: Low Pitch]
