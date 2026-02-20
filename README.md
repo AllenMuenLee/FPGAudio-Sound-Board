@@ -91,7 +91,7 @@ graph LR
         I2S_TX[I2S Transmitter Module]
         
         %% The DSP Core
-        subgraph DSP Core (audio_processor_top.sv)
+        subgraph audio_processor_top.sv
             E0[000: Noise Gate]
             E1[001: High Pitch]
             E2[010: Low Pitch]
