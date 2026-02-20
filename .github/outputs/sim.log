@@ -4,27 +4,27 @@ TEST START
   CI/CD Automated Testing Suite
 ============================================================
 Configuration:
-  Clock Frequency:    50 MHz
-  Audio Sample Rate:  48000 Hz
+  Clock Frequency:    500 MHz
+  Audio Sample Rate:  500000000 Hz
   Sine/Saw Tones:     1 each per effect
-  Samples per Tone:   48
+  Samples per Tone:   50
 ============================================================
 
-[390000] Testing Effect 0 (Noise Gate) SW=000
-[490000]   Sine: 1000 Hz
-[1000510000]   Saw : 1000 Hz
-[2000830000] Testing Effect 1 (High Pitch) SW=001
-[2000930000]   Sine: 1000 Hz
-[3001150000]   Saw : 1000 Hz
-[4001470000] Testing Effect 2 (Low Pitch) SW=010
-[4001570000]   Sine: 1000 Hz
-[5001790000]   Saw : 1000 Hz
-[6002110000] Testing Effect 3 (Reverb) SW=011
-[6002210000]   Sine: 1000 Hz
-[7002430000]   Saw : 1000 Hz
-[8002750000] Testing Effect 4 (Muffled) SW=100
-[8002850000]   Sine: 1000 Hz
-[9003070000]   Saw : 1000 Hz
+[39000] Testing Effect 0 (Noise Gate) SW=000
+[49000]   Sine: 20000000 Hz
+[149000]   Saw : 20000000 Hz
+[249000] Testing Effect 1 (High Pitch) SW=001
+[259000]   Sine: 20000000 Hz
+[359000]   Saw : 20000000 Hz
+[459000] Testing Effect 2 (Low Pitch) SW=010
+[469000]   Sine: 20000000 Hz
+[569000]   Saw : 20000000 Hz
+[669000] Testing Effect 3 (Reverb) SW=011
+[679000]   Sine: 20000000 Hz
+[779000]   Saw : 20000000 Hz
+[879000] Testing Effect 4 (Muffled) SW=100
+[889000]   Sine: 20000000 Hz
+[989000]   Saw : 20000000 Hz
 
-[10003390000] Simulation complete. Exiting...
-- test/tb.sv:187: Verilog $finish
+[1089000] Simulation complete. Exiting...
+- test/tb.sv:188: Verilog $finish
