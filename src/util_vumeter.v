@@ -40,8 +40,8 @@ module vu_meter (
     // Timing Parameters
     // ========================================================================
     // Decay time: ~336ms gives smooth, visible LED transitions
-    // At 50MHz: 16,777,216 cycles ≈ 336ms
-    localparam DECAY_TIME = 24'd16_777_216;
+    // At 50MHz: 16,777,215 cycles ≈ 336ms
+    localparam DECAY_TIME = 24'd16_777_215;
     
     // ========================================================================
     // Peak Hold and Decay Logic
