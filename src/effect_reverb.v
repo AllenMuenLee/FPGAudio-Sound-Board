@@ -26,7 +26,7 @@
 //   - Prevents harsh clipping with overflow detection
 //
 // ============================================================================
-
+`timescale 1ns/1ps
 module reverb_effect (
     input  wire        clk,          // System clock
     input  wire        reset,        // Active-high synchronous reset
