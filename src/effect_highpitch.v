@@ -19,7 +19,7 @@
 //   - Pitch shift: approximately +12 semitones (one octave up)
 //
 // ============================================================================
-
+`timescale 1ns/1ps
 module high_pitch_effect (
     input  wire        clk,          // System clock
     input  wire        reset,        // Active-high synchronous reset
