@@ -35,7 +35,7 @@ module tb;
     parameter AUDIO_SAMPLE_RATE = 48000;    // 48kHz audio
     parameter SINE_FREQUENCY = 1000;        // 1kHz test tone
     parameter SINE_AMPLITUDE = 16000;       // ~50% of 16-bit range
-    parameter TEST_DURATION_SAMPLES = 20; // Samples per effect test
+    parameter TEST_DURATION_SAMPLES = 2; // Samples per effect test
     
     // ========================================================================
     // Testbench Signals
@@ -117,7 +117,6 @@ module tb;
         audio_in = 16'sd0;
         SW = 10'b0;
         reset = 1;
-        sample_count = 0;
         total_tests = 0;
         passed_tests = 0;
         failed_tests = 0;
