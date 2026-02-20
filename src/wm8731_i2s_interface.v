@@ -5,7 +5,7 @@
 // Supports 16-bit stereo audio at 48kHz sample rate
 // WM8731 operates in master mode (generates BCLK and LRCK)
 // ============================================================================
-
+`timescale 1ns/1ps
 module i2s_interface (
     input             clk,           // System clock (50MHz)
     input             reset,         // Active high reset

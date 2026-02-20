@@ -5,7 +5,7 @@
 // Configuration: Master mode, 48kHz sample rate, Line In/Out enabled
 // Sends initialization sequence to configure all codec registers
 // ============================================================================
-
+`timescale 1ns/1ps
 module wm8731_config (
     input      clk,          // System clock (50MHz)
     input      reset,        // Active high reset

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module de1soc_wrapper (
     input         CLOCK_50,
     input  [9:0]  SW,

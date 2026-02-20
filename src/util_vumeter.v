@@ -5,7 +5,7 @@
 // Features peak hold and smooth decay for flicker-free visualization
 // Monitors 16-bit signed audio samples and converts to LED output
 // ============================================================================
-
+`timescale 1ns/1ps
 module vu_meter (
     input             clk,           // System clock (50MHz)
     input             reset,         // Active high reset

@@ -5,7 +5,7 @@
 // Target: 12.288 MHz for 48kHz operation (48kHz * 256)
 // From 50MHz: Divide by ~4.07 ≈ 12.285 MHz (very close!)
 // ============================================================================
-
+`timescale 1ns/1ps
 module audio_clock (
     input      clk_50mhz,    // 50MHz input clock
     input      reset,        // Active high reset

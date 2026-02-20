@@ -27,7 +27,7 @@
 //   - Computationally efficient (only additions and shifts)
 //
 // ============================================================================
-
+`timescale 1ns/1ps
 module muffled_effect (
     input  wire        clk,          // System clock
     input  wire        reset,        // Active-high synchronous reset

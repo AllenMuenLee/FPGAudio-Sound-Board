@@ -24,7 +24,7 @@
 //   - RLS_STEP:  Release decrement = 1 (slow gain decrease)
 //
 // ============================================================================
-
+`timescale 1ns/1ps
 module noise_gate (
     input  wire        clk,          // System clock
     input  wire signed [15:0] audio_in,   // Signed 16-bit audio input
