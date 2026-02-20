@@ -95,7 +95,7 @@ module reverb_effect (
             // ================================================================
             // Combine original signal with 25% of delayed signal
             // Sign-extend audio_in to 17 bits for overflow detection
-            mix = {audio_in[15], audio_in} + (delay_out >>> 2);
+            mix = {audio_in[15], audio_in} + ({delay_out[15], delay_out} >>> 2);
             
             // Check for overflow and apply saturation
             if (mix[16:15] == 2'b01) 
