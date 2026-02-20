@@ -35,7 +35,8 @@ module tb;
 
     localparam integer SAMPLE_DIV = 1;
 
-    localparam integer NUM_TONES = 1;
+    localparam integer SINE_FREQ_HZ = 20_000_000;
+    localparam integer SAW_FREQ_HZ  = 20_000_000;
 
     // ------------------------------------------------------------------------
     // DUT interface
@@ -92,17 +93,6 @@ module tb;
     end
 
     // ------------------------------------------------------------------------
-    // Tone lists
-    // ------------------------------------------------------------------------
-    integer sine_freqs [0:NUM_TONES-1];
-    integer saw_freqs  [0:NUM_TONES-1];
-
-    initial begin
-        sine_freqs[0] = 20_000_000;
-        saw_freqs[0]  = 20_000_000;
-    end
-
-    // ------------------------------------------------------------------------
     // Main test sequence
     // ------------------------------------------------------------------------
     integer tone_idx;
@@ -116,7 +106,8 @@ module tb;
         $display("Configuration:");
         $display("  Clock Frequency:    %0d MHz", (CLK_FREQ_HZ/1_000_000));
         $display("  Audio Sample Rate:  %0d Hz", AUDIO_SAMPLE_RATE);
-        $display("  Sine/Saw Tones:     %0d each per effect", NUM_TONES);
+        $display("  Sine Tone:          %0d Hz", SINE_FREQ_HZ);
+        $display("  Saw Tone:           %0d Hz", SAW_FREQ_HZ);
         $display("  Samples per Tone:   %0d", SAMPLES_PER_TONE);
         $display("============================================================\n");
 
@@ -134,10 +125,10 @@ module tb;
         SW[2:0] = 3'b000;
         $display("[%0t] Testing Effect 0 (Noise Gate) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
-        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
-        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
-        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
+        play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
+        play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
 
         // ------------------------------------------------------------
         // Effect 1: High Pitch (SW[2:0] = 001)
@@ -145,10 +136,10 @@ module tb;
         SW[2:0] = 3'b001;
         $display("[%0t] Testing Effect 1 (High Pitch) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
-        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
-        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
-        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
+        play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
+        play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
 
         // ------------------------------------------------------------
         // Effect 2: Low Pitch (SW[2:0] = 010)
@@ -156,10 +147,10 @@ module tb;
         SW[2:0] = 3'b010;
         $display("[%0t] Testing Effect 2 (Low Pitch) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
-        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
-        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
-        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
+        play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
+        play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
 
         // ------------------------------------------------------------
         // Effect 3: Reverb (SW[2:0] = 011)
@@ -167,10 +158,10 @@ module tb;
         SW[2:0] = 3'b011;
         $display("[%0t] Testing Effect 3 (Reverb) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
-        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
-        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
-        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
+        play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
+        play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
 
         // ------------------------------------------------------------
         // Effect 4: Muffled (SW[2:0] = 100)
@@ -178,10 +169,10 @@ module tb;
         SW[2:0] = 3'b100;
         $display("[%0t] Testing Effect 4 (Muffled) SW=%b", $time, SW[2:0]);
         repeat(5) @(posedge clk);
-        $display("[%0t]   Sine: %0d Hz", $time, sine_freqs[0]);
-        play_sine_tone(sine_freqs[0], SINE_AMPLITUDE, SAMPLES_PER_TONE);
-        $display("[%0t]   Saw : %0d Hz", $time, saw_freqs[0]);
-        play_saw_tone(saw_freqs[0], SAW_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
+        play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+        $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
+        play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
 
         $display("\n[%0t] Simulation complete. Exiting...", $time);
         repeat(10) @(posedge clk);
