@@ -71,3 +71,61 @@ assets/         README images
 .github/        CI workflows and outputs
 README.md
 ```
+
+**DE1-SoC Physical Interface**
+```mermaid
+graph LR
+    %% External Inputs & Outputs
+    subgraph DE1-SoC Physical Interfaces
+        SW[Switches SW 2:0]
+        LED[VU Meter LEDs LEDR 9:0]
+        MIC[Audio Line-In]
+        SPK[Audio Line-Out]
+    end
+
+    %% Audio Codec Chip
+    subgraph WM8731 Audio Codec
+        ADC[Analog to Digital Converter]
+        DAC[Digital to Analog Converter]
+    end
+
+    %% FPGA Internal Logic
+    subgraph Cyclone V FPGA Fabric
+        I2S_RX[I2S Receiver Module]
+        I2S_TX[I2S Transmitter Module]
+        
+        %% The DSP Core
+        subgraph audio_processor_top.sv
+            E0[000: Noise Gate]
+            E1[001: High Pitch]
+            E2[010: Low Pitch]
+            E3[011: Reverb]
+            E4[100: Muffled]
+            MUX{Output Multiplexer}
+        end
+        
+        VU[VU Meter UI Module]
+    end
+
+    %% Routing the signals
+    MIC --> ADC
+    ADC -- Serial I2S --> I2S_RX
+    
+    %% Parallel Hardware Execution!
+    I2S_RX -- 16-bit audio_in --> E0 & E1 & E2 & E3 & E4
+    
+    E0 & E1 & E2 & E3 & E4 --> MUX
+    SW -- Selects Route --> MUX
+    
+    MUX -- 16-bit Processed Audio --> I2S_TX
+    MUX -- 16-bit Processed Audio --> VU
+    
+    I2S_TX -- Serial I2S --> DAC
+    DAC --> SPK
+    VU --> LED
+
+    %% Styling
+    style MUX fill:#f96,stroke:#333,stroke-width:2px
+    style I2S_RX fill:#bbf,stroke:#333
+    style I2S_TX fill:#bbf,stroke:#333
+```
