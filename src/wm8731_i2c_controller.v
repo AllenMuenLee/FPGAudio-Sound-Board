@@ -5,7 +5,7 @@
 // Supports write transactions to configure codec registers
 // Clock frequency: ~100kHz I2C from 50MHz system clock
 // ============================================================================
-
+`timescale 1ns/1ps
 module i2c_controller (
     input             clk,          // System clock (50MHz)
     input             reset,        // Active high reset
