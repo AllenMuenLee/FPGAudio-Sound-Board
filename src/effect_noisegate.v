@@ -9,6 +9,7 @@
 // ============================================================================
 
 module noise_gate (
+  input wire reset,
   input clk,
   input signed [15:0] audio_in,
   output [15:0] audio_out
