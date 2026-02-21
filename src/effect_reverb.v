@@ -67,7 +67,7 @@ module DIG_Add
 );
    wire [Bits:0] temp;
 
-   assign temp = a + b + c_i;
+   assign temp = a + b + {{Bits{1'b0}}, c_i};
    assign s = temp [(Bits-1):0];
    assign c_o = temp[Bits];
 endmodule
