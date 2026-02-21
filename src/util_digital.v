@@ -13,6 +13,11 @@
 // DIG_Add - Full adder with carry
 // DIG_Sub - Full subtractor with borrow
 // DIG_Register_BUS - Enabled register
+// DIG_Neg - Two's complement negation (for absolute value calculation)
+// Mux_2x1_NBits - 2-to-1 multiplexer (for conditional data routing)
+// CompUnsigned - Unsigned comparator with >, =, < outputs (for threshold detection)
+// DIG_Mul_unsigned - Unsigned multiplier (for gain/volume control)
+// DIG_BitExtender - Sign/zero extension (for width matching)
 
 // ============================================================================
 // N-Bit Counter Module
@@ -196,4 +201,100 @@ module DIG_Register_BUS #(
         if (en)
             state <= D;  // Load new value
    end
+endmodule
+
+// ============================================================================
+// N-Bit Negation Module
+// ============================================================================
+// Two's complement negation
+// Used for absolute value calculations in noise gate
+// ============================================================================
+module DIG_Neg #(
+    parameter Bits = 1  // Operand width in bits
+)
+(
+    input signed [(Bits-1):0] in,   // Input value
+    output signed [(Bits-1):0] out  // Negated output (-in)
+);
+    assign out = -in;  // Two's complement negation
+endmodule
+
+// ============================================================================
+// 2-to-1 Multiplexer Module
+// ============================================================================
+// Selects between two N-bit inputs based on selector
+// Used for conditional data routing
+// ============================================================================
+module Mux_2x1_NBits #(
+    parameter Bits = 2  // Data width in bits
+)
+(
+    input [0:0] sel,                 // Selector: 0=in_0, 1=in_1
+    input [(Bits - 1):0] in_0,       // Input 0
+    input [(Bits - 1):0] in_1,       // Input 1
+    output reg [(Bits - 1):0] out    // Selected output
+);
+    always @ (*) begin
+        case (sel)
+            1'h0: out = in_0;
+            1'h1: out = in_1;
+            default: out = 'h0;
+        endcase
+    end
+endmodule
+
+// ============================================================================
+// Unsigned Comparator Module
+// ============================================================================
+// Compares two unsigned values
+// Used for threshold detection in noise gate
+// ============================================================================
+module CompUnsigned #(
+    parameter Bits = 1  // Operand width in bits
+)
+(
+    input [(Bits -1):0] a,  // First operand
+    input [(Bits -1):0] b,  // Second operand
+    output \> ,             // a > b
+    output \= ,             // a == b
+    output \<               // a < b
+);
+    assign \> = a > b;
+    assign \= = a == b;
+    assign \< = a < b;
+endmodule
+
+// ============================================================================
+// Unsigned Multiplier Module
+// ============================================================================
+// Multiplies two unsigned N-bit values, produces 2N-bit result
+// Used for gain/volume control in noise gate
+// ============================================================================
+module DIG_Mul_unsigned #(
+    parameter Bits = 1  // Input operand width
+)
+(
+    input [(Bits-1):0] a,          // First operand
+    input [(Bits-1):0] b,          // Second operand
+    output [(Bits*2-1):0] mul      // Product (double width)
+);
+    assign mul = a * b;  // Unsigned multiplication
+endmodule
+
+// ============================================================================
+// Bit Extension Module
+// ============================================================================
+// Sign-extends or zero-extends input to wider output
+// Used for width matching in arithmetic operations
+// ============================================================================
+module DIG_BitExtender #(
+    parameter inputBits = 2,   // Input width
+    parameter outputBits = 4   // Output width (must be >= inputBits)
+)
+(
+    input [(inputBits-1):0] in,       // Input value
+    output [(outputBits - 1):0] out   // Extended output
+);
+    // Sign extension: replicate MSB for signed values
+    assign out = {{(outputBits - inputBits){in[inputBits - 1]}}, in};
 endmodule
