@@ -17,7 +17,7 @@ module high_pitch_effect (
   wire unused_counter_ovf;
   wire [15:0] unused_ram_1d;
   wire unused_add_co;
-  DIG_Counter_Nbit_highpitch #(
+  DIG_Counter_Nbit #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
@@ -26,7 +26,7 @@ module high_pitch_effect (
     .clr( reset ),
     .out( s0 )
   );
-  DIG_RAMDualAccess_highpitch #(
+  DIG_RAMDualAccess #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -39,7 +39,7 @@ module high_pitch_effect (
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
-  DIG_Add_highpitch #(
+  DIG_Add #(
     .Bits(18)
   )
   DIG_Add_i2 (
@@ -49,7 +49,7 @@ module high_pitch_effect (
     .s( s3 ),
     .c_o( unused_add_co )
   );
-  DIG_Register_BUS_highpitch #(
+  DIG_Register_BUS #(
     .Bits(18)
   )
   DIG_Register_BUS_i3 (
