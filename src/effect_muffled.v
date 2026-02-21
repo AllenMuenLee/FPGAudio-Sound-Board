@@ -60,7 +60,7 @@ module DIG_Register_BUS #(
    end
 endmodule
 
-module Muffled (
+module muffled_effect (
   input [15:0] Audio_in,
   input clock,
   output [15:0] Audio_out
