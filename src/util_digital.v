@@ -6,6 +6,14 @@
 // Include this file once to avoid duplicate module declarations
 // ============================================================================
 
+// MODULE LIST
+// DIG_Counter_Nbit - Up counter with clear
+// DIG_RAMDualAccess - Two-port RAM (write on port 1, independent read on port 2)
+// DIG_RAMDualPort - Single-port RAM (unified address for read/write)
+// DIG_Add - Full adder with carry
+// DIG_Sub - Full subtractor with borrow
+// DIG_Register_BUS - Enabled register
+
 // ============================================================================
 // N-Bit Counter Module
 // ============================================================================
@@ -42,9 +50,11 @@ module DIG_Counter_Nbit
 endmodule
 
 // ============================================================================
-// Dual-Port RAM Module
+// Dual-Port RAM Module (Two Independent Ports)
 // ============================================================================
 // True dual-port memory with independent read/write operations
+// Port 1: Read/Write with separate addresses
+// Port 2: Independent read with separate address
 // Memory Type: Distributed RAM (implemented in FPGA LUTs, not block RAM)
 // ============================================================================
 module DIG_RAMDualAccess
@@ -66,7 +76,7 @@ module DIG_RAMDualAccess
     reg [(Bits-1):0] memory [0:((1 << AddrBits)-1)];
     
     // Port 1: Tri-state output when not reading
-    assign \1D = ld? memory[\1A ] : 'hz;
+    assign \1D = ld? memory[\1A ] : {Bits{1'b0}};
     
     // Port 2: Always reads current address
     assign \2D = memory[\2A ];
@@ -77,6 +87,38 @@ module DIG_RAMDualAccess
             memory[\1A ] <= \1Din ;  // Write data to memory
     end
 
+endmodule
+
+// ============================================================================
+// Single-Port RAM Module
+// ============================================================================
+// Simple RAM with single address port for both read and write
+// Used for delay lines and simple memory buffers
+// Memory Type: Distributed RAM (implemented in FPGA LUTs, not block RAM)
+// ============================================================================
+module DIG_RAMDualPort
+#(
+    parameter Bits = 16,      // Data width in bits
+    parameter AddrBits = 4    // Address width (memory size = 2^AddrBits)
+)
+(
+    input [(AddrBits-1):0] A,     // Address for read/write
+    input [(Bits-1):0] Din,       // Data input (write data)
+    input str,                    // Store enable (write enable)
+    input C,                      // Clock signal
+    input ld,                     // Load enable (read enable)
+    output [(Bits-1):0] D         // Data output (read data)
+);
+    reg [(Bits-1):0] memory[0:((1 << AddrBits) - 1)];
+    
+    // Read operation (conditional based on ld)
+    assign D = ld? memory[A] : {Bits{1'b0}};
+    
+    // Synchronous write operation
+    always @ (posedge C) begin
+        if (str)
+            memory[A] <= Din;
+    end
 endmodule
 
 // ============================================================================
@@ -99,9 +141,34 @@ module DIG_Add
    wire [Bits:0] temp;  // Extra bit for carry
    
    // Perform addition with carry
-   assign temp = a + b + c_i;
+   assign temp = a + b + {{Bits{1'b0}}, c_i};
    assign s = temp [(Bits-1):0];  // Extract sum
    assign c_o = temp[Bits];       // Extract carry-out
+endmodule
+
+// ============================================================================
+// N-Bit Subtractor Module
+// ============================================================================
+// Full subtractor with borrow-in and borrow-out
+// Used for difference calculations in filtering operations
+// ============================================================================
+module DIG_Sub
+#(
+    parameter Bits = 1  // Operand width in bits
+)
+(
+    input [(Bits-1):0] a,        // Minuend (first operand)
+    input [(Bits-1):0] b,        // Subtrahend (second operand)
+    input c_i,                   // Borrow input
+    output [(Bits-1):0] s,       // Difference output
+    output c_o                   // Borrow output
+);
+    wire [Bits:0] temp;  // Extra bit for borrow
+    
+    // Perform subtraction with borrow
+    assign temp = a - b - {{Bits{1'b0}}, c_i};
+    assign s = temp[(Bits-1):0];  // Extract difference
+    assign c_o = temp[Bits];      // Extract borrow-out
 endmodule
 
 // ============================================================================
