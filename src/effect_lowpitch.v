@@ -33,7 +33,7 @@ endmodule
 
 module DIG_RAMDualAccess
 #(
-    parameter Bits = 8,
+    parameter Bits = 16,
     parameter AddrBits = 4
 )
 (
@@ -115,7 +115,7 @@ module low_pitch_effect (
   )
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
-    .C( sys_clock ),
+    .C( clk ),
     .clr( 1'b0 ),
     .out( s0 )
   );
@@ -128,9 +128,9 @@ module low_pitch_effect (
     .C( sys_clock ),
     .ld( 1'b1 ),
     .\1A ( s0 ),
-    .\1Din ( audio_input ),
+    .\1Din ( audio_in ),
     .\2A ( s1 ),
-    .\2D ( audio_output )
+    .\2D ( audio_out )
   );
   DIG_Add #(
     .Bits(18)
