@@ -17,7 +17,7 @@ module low_pitch_effect (
   wire unused_counter_ovf;
   wire [15:0] unused_ram_1d;
   wire unused_add_co;
-  DIG_Counter_Nbit_lowpitch #(
+  DIG_Counter_Nbit #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
@@ -27,7 +27,7 @@ module low_pitch_effect (
     .out( s0 ),
     .ovf( unused_counter_ovf )
   );
-  DIG_RAMDualAccess_lowpitch #(
+  DIG_RAMDualAccess #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -41,7 +41,7 @@ module low_pitch_effect (
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
-  DIG_Add_lowpitch #(
+  DIG_Add #(
     .Bits(18)
   )
   DIG_Add_i2 (
@@ -51,7 +51,7 @@ module low_pitch_effect (
     .s( s3 ),
     .c_o( unused_add_co )
   );
-  DIG_Register_BUS_lowpitch #(
+  DIG_Register_BUS #(
     .Bits(18)
   )
   DIG_Register_BUS_i3 (
