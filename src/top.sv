@@ -57,13 +57,19 @@
         reg         ram_we_a;
         reg  [13:0] ram_addr_a;
         reg  [15:0] ram_din_a;
-        reg  [13:0] ram_addr_b;
-        wire [15:0] ram_dout_a;
-        wire [15:0] ram_dout_b;
+        reg  [13:0] ram_addr_rd;
+        wire [7:0]  ram_dout_byte;
+        reg  [7:0]  ram_rd_lo;
+        reg  [7:0]  ram_rd_hi;
+        reg  [15:0] ram_rd_data;
+        reg         ram_phase;
+        reg  [15:0] ram_din_latched;
+        wire        clk_en;
         
         noise_gate ng_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(noise_gate_out));
         high_pitch_effect hp_inst (
             .clk(clk),
+            .clk_en(clk_en),
             .reset(reset),
             .audio_in(audio_in),
             .audio_out(high_pitch_out),
@@ -75,6 +81,7 @@
         );
         low_pitch_effect lp_inst (
             .clk(clk),
+            .clk_en(clk_en),
             .reset(reset),
             .audio_in(audio_in),
             .audio_out(low_pitch_out),
@@ -86,6 +93,7 @@
         );
         reverb_effect rev_inst (
             .clk(clk),
+            .clk_en(clk_en),
             .reset(reset),
             .audio_in(audio_in),
             .audio_out(reverb_out),
@@ -102,60 +110,83 @@
             ram_we_a = 1'b0;
             ram_addr_a = 14'd0;
             ram_din_a = 16'd0;
-            ram_addr_b = 14'd0;
+            ram_addr_rd = 14'd0;
             case (effect_select)
                 3'b001: begin // High pitch
                     ram_we_a = hp_ram_wr_en;
                     ram_addr_a = hp_ram_wr_addr;
                     ram_din_a = hp_ram_wr_data;
-                    ram_addr_b = hp_ram_rd_addr;
+                    ram_addr_rd = hp_ram_rd_addr;
                 end
                 3'b010: begin // Low pitch
                     ram_we_a = lp_ram_wr_en;
                     ram_addr_a = lp_ram_wr_addr;
                     ram_din_a = lp_ram_wr_data;
-                    ram_addr_b = lp_ram_rd_addr;
+                    ram_addr_rd = lp_ram_rd_addr;
                 end
                 3'b011: begin // Reverb (single-port usage)
                     ram_we_a = rev_ram_wr_en;
                     ram_addr_a = rev_ram_wr_addr;
                     ram_din_a = rev_ram_wr_data;
-                    ram_addr_b = 14'd0;
+                    ram_addr_rd = rev_ram_rd_addr;
                 end
                 default: begin
                     ram_we_a = 1'b0;
                     ram_addr_a = 14'd0;
                     ram_din_a = 16'd0;
-                    ram_addr_b = 14'd0;
+                    ram_addr_rd = 14'd0;
                 end
             endcase
         end
 
-        shared_ram_16x14 shared_ram (
+        // Two-phase byte RAM access: low byte on phase 0, high byte on phase 1
+        assign clk_en = ram_phase;
+
+        shared_byte_ram_8x15 shared_ram (
             .clk(clk),
-            .we_a(ram_we_a),
-            .addr_a(ram_addr_a),
-            .din_a(ram_din_a),
-            .dout_a(ram_dout_a),
-            .addr_b(ram_addr_b),
-            .dout_b(ram_dout_b)
+            .we(ram_we_a),
+            .addr_wr({ram_addr_a, ram_phase}),
+            .din((ram_phase == 1'b0) ? ram_din_a[7:0] : ram_din_latched[15:8]),
+            .addr_rd({ram_addr_rd, ram_phase}),
+            .dout(ram_dout_byte)
         );
 
-        assign hp_ram_rd_data = (effect_select == 3'b001) ? ram_dout_b : 16'd0;
-        assign lp_ram_rd_data = (effect_select == 3'b010) ? ram_dout_b : 16'd0;
-        assign rev_ram_rd_data = (effect_select == 3'b011) ? ram_dout_a : 16'd0;
+        always @(posedge clk or posedge reset) begin
+            if (reset) begin
+                ram_phase <= 1'b0;
+                ram_din_latched <= 16'd0;
+                ram_rd_lo <= 8'd0;
+                ram_rd_hi <= 8'd0;
+                ram_rd_data <= 16'd0;
+            end else begin
+                if (ram_phase == 1'b0) begin
+                    ram_din_latched <= ram_din_a;
+                    ram_rd_lo <= ram_dout_byte;
+                end else begin
+                    ram_rd_hi <= ram_dout_byte;
+                    ram_rd_data <= {ram_dout_byte, ram_rd_lo};
+                end
+                ram_phase <= ~ram_phase;
+            end
+        end
+
+        assign hp_ram_rd_data = (effect_select == 3'b001) ? ram_rd_data : 16'd0;
+        assign lp_ram_rd_data = (effect_select == 3'b010) ? ram_rd_data : 16'd0;
+        assign rev_ram_rd_data = (effect_select == 3'b011) ? ram_rd_data : 16'd0;
         
         always @(posedge clk or posedge reset) begin
             if (reset) audio_out <= 16'd0;
             else begin
-                case (effect_select)
-                    3'b000: audio_out <= noise_gate_out;
-                    3'b001: audio_out <= high_pitch_out;
-                    3'b010: audio_out <= low_pitch_out;
-                    3'b011: audio_out <= reverb_out;
-                    3'b100: audio_out <= muffled_out;
-                    default: audio_out <= audio_in;
-                endcase
+                if (ram_phase == 1'b1) begin
+                    case (effect_select)
+                        3'b000: audio_out <= noise_gate_out;
+                        3'b001: audio_out <= high_pitch_out;
+                        3'b010: audio_out <= low_pitch_out;
+                        3'b011: audio_out <= reverb_out;
+                        3'b100: audio_out <= muffled_out;
+                        default: audio_out <= audio_in;
+                    endcase
+                end
             end
         end
     endmodule
@@ -398,6 +429,7 @@
 
     module high_pitch_effect (
     input wire clk,
+    input wire clk_en,
     input wire reset,
     input [15:0] audio_in,
     output [15:0] audio_out,
@@ -417,7 +449,7 @@
         .Bits(14)
     )
     DIG_Counter_Nbit_i0 (
-        .en( 1'b1 ),
+        .en( clk_en ),
         .C( clk ),
         .clr( reset ),
         .out( s0 ),
@@ -444,7 +476,7 @@
     DIG_Register_BUS_i3 (
         .D( s3 ),
         .C( clk ),
-        .en( 1'b1 ),
+        .en( clk_en ),
         .Q( s2 )
     );
     assign s1 = s2[17:4];
@@ -462,6 +494,7 @@
 
     module low_pitch_effect (
     input wire clk,
+    input wire clk_en,
     input wire reset,
     input [15:0] audio_in,
     output [15:0] audio_out,
@@ -481,7 +514,7 @@
         .Bits(14)
     )
     DIG_Counter_Nbit_i0 (
-        .en( 1'b1 ),
+        .en( clk_en ),
         .C( clk ),
         .clr( 1'b0 ),
         .out( s0 ),
@@ -508,7 +541,7 @@
     DIG_Register_BUS_i3 (
         .D( s3 ),
         .C( clk ),
-        .en( 1'b1 ),
+        .en( clk_en ),
         .Q( s2 )
     );
     assign s1 = s2[17:4];
@@ -842,6 +875,7 @@
 
     module reverb_effect (
     input wire clk,
+    input wire clk_en,
     input wire reset,   
     input [15:0] audio_in, // Audio input (not too loud or else)
     output [15:0] audio_out, // evertime sound loops it becomes 25% vol
@@ -864,7 +898,7 @@
         .Bits(14)
     )
     DIG_Counter_Nbit_i0 (
-        .en( 1'b1 ),
+        .en( clk_en ),
         .C( clk ),
         .clr( 1'b0 ),
         .out( s0 ),
@@ -1088,25 +1122,23 @@
     // One write port (A) with readback, plus a second read port (B).
     // Used by time-multiplexed effects to reduce total RAM usage.
     // ============================================================================
-    module shared_ram_16x14 (
+    module shared_byte_ram_8x15 (
         input         clk,
-        input         we_a,
-        input  [13:0] addr_a,
-        input  [15:0] din_a,
-        output [15:0] dout_a,
-        input  [13:0] addr_b,
-        output [15:0] dout_b
+        input         we,
+        input  [14:0] addr_wr,
+        input  [7:0]  din,
+        input  [14:0] addr_rd,
+        output [7:0]  dout
     );
-        reg [15:0] memory [0:16383];
+        reg [7:0] memory [0:32767];
 
-        // Combinational reads
-        assign dout_a = memory[addr_a];
-        assign dout_b = memory[addr_b];
+        // Combinational read
+        assign dout = memory[addr_rd];
 
-        // Synchronous write on port A
+        // Synchronous write
         always @ (posedge clk) begin
-            if (we_a)
-                memory[addr_a] <= din_a;
+            if (we)
+                memory[addr_wr] <= din;
         end
     endmodule
 
