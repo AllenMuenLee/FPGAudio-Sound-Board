@@ -3,7 +3,7 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Counter_Nbit
+module DIG_Counter_Nbit_lowpitch
 #(
     parameter Bits = 16
 )
@@ -31,7 +31,7 @@ module DIG_Counter_Nbit
     end
 endmodule
 
-module DIG_RAMDualAccess
+module DIG_RAMDualAccess_lowpitch
 #(
     parameter Bits = 16,
     parameter AddrBits = 4
@@ -60,7 +60,7 @@ module DIG_RAMDualAccess
 endmodule
 
 
-module DIG_Add
+module DIG_Add_lowpitch
 #(
     parameter Bits = 16
 )
@@ -80,7 +80,7 @@ endmodule
 
 
 
-module DIG_Register_BUS #(
+module DIG_Register_BUS_lowpitch #(
     parameter Bits = 1
 )
 (
@@ -110,16 +110,20 @@ module low_pitch_effect (
   wire [13:0] s1;
   wire [17:0] s2;
   wire [17:0] s3;
-  DIG_Counter_Nbit #(
+  wire unused_counter_ovf;
+  wire [15:0] unused_ram_1d;
+  wire unused_add_co;
+  DIG_Counter_Nbit_lowpitch #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
     .C( clk ),
     .clr( 1'b0 ),
-    .out( s0 )
+    .out( s0 ),
+    .ovf( unused_counter_ovf )
   );
-  DIG_RAMDualAccess #(
+  DIG_RAMDualAccess_lowpitch #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -129,19 +133,21 @@ module low_pitch_effect (
     .ld( 1'b1 ),
     .\1A ( s0 ),
     .\1Din ( audio_in[15:0] ),
+    .\1D ( unused_ram_1d ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
-  DIG_Add #(
+  DIG_Add_lowpitch #(
     .Bits(18)
   )
   DIG_Add_i2 (
     .a( s2 ),
     .b( 18'b1000 ),
     .c_i( 1'b0 ),
-    .s( s3 )
+    .s( s3 ),
+    .c_o( unused_add_co )
   );
-  DIG_Register_BUS #(
+  DIG_Register_BUS_lowpitch #(
     .Bits(18)
   )
   DIG_Register_BUS_i3 (

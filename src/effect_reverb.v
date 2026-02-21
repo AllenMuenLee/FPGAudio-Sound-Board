@@ -3,7 +3,7 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Counter_Nbit
+module DIG_Counter_Nbit_reverb
 #(
     parameter Bits = 2
 )
@@ -31,7 +31,7 @@ module DIG_Counter_Nbit
     end
 endmodule
 
-module DIG_RAMDualPort
+module DIG_RAMDualPort_reverb
 #(
     parameter Bits = 16,
     parameter AddrBits = 4
@@ -53,8 +53,9 @@ module DIG_RAMDualPort
       memory[A] <= Din;
   end
 endmodule
+ 
 
-module DIG_Add
+module DIG_Add_reverb
 #(
     parameter Bits = 1
 )
@@ -86,16 +87,20 @@ module reverb_effect (
   wire [15:0] s2;
   wire [15:0] s3;
   wire s4;
-  DIG_Counter_Nbit #(
+  wire unused_counter_ovf;
+  wire unused_add0_co;
+  wire unused_add1_co;
+  DIG_Counter_Nbit_reverb #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
     .C( clk ),
     .clr( 1'b0 ),
-    .out( s0 )
+    .out( s0 ),
+    .ovf( unused_counter_ovf )
   );
-  DIG_RAMDualPort #(
+  DIG_RAMDualPort_reverb #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -108,24 +113,26 @@ module reverb_effect (
     .D( s2 )
   );
   // feedbmix
-  DIG_Add #(
+  DIG_Add_reverb #(
     .Bits(16)
   )
   DIG_Add_i2 (
     .a( audio_in[15:0] ),
     .b( s3[15:0] ),
     .c_i( 1'b0 ),
-    .s( s1 )
+    .s( s1 ),
+    .c_o( unused_add0_co )
   );
   // outputmix
-  DIG_Add #(
+  DIG_Add_reverb #(
     .Bits(16)
   )
   DIG_Add_i3 (
     .a( audio_in[15:0] ),
     .b( s2[15:0] ),
     .c_i( 1'b0 ),
-    .s( audio_out )
+    .s( audio_out ),
+    .c_o( unused_add1_co )
   );
   assign s4 = s2[15];
   assign s3[11:0] = s2[15:4];

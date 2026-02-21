@@ -3,7 +3,7 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Sub #(
+module DIG_Sub_muffled #(
     parameter Bits = 2
 )
 (
@@ -20,7 +20,7 @@ module DIG_Sub #(
     assign c_o = temp[Bits];
 endmodule
 
-module DIG_Add
+module DIG_Add_muffled
 #(
     parameter Bits = 1
 )
@@ -40,7 +40,7 @@ endmodule
 
 
 
-module DIG_Register_BUS #(
+module DIG_Register_BUS_muffled #(
     parameter Bits = 1
 )
 (
@@ -78,15 +78,21 @@ module muffled_effect (
   wire s7;
   wire s8;
   wire s9;
+  wire unused_sub0_co;
+  wire unused_sub1_co;
+  wire unused_add0_co;
+  wire unused_add1_co;
+  wire unused_add2_co;
   // Sub_1
-  DIG_Sub #(
+  DIG_Sub_muffled #(
     .Bits(16)
   )
   DIG_Sub_i0 (
     .a( audio_in[15:0] ),
     .b( y_1[15:0] ),
     .c_i( 1'b0 ),
-    .s( s0 )
+    .s( s0 ),
+    .c_o( unused_sub0_co )
   );
   assign s7 = s0[15];
   assign s2[11:0] = s0[15:4];
@@ -95,17 +101,18 @@ module muffled_effect (
   assign s2[14] = s7;
   assign s2[15] = s7;
   // Add_1
-  DIG_Add #(
+  DIG_Add_muffled #(
     .Bits(16)
   )
   DIG_Add_i1 (
     .a( s2[15:0] ),
     .b( y_1[15:0] ),
     .c_i( 1'b0 ),
-    .s( s3 )
+    .s( s3 ),
+    .c_o( unused_add0_co )
   );
   // Reg_1
-  DIG_Register_BUS #(
+  DIG_Register_BUS_muffled #(
     .Bits(16)
   )
   DIG_Register_BUS_i2 (
@@ -115,14 +122,15 @@ module muffled_effect (
     .Q( y_1 )
   );
   // Sub_2
-  DIG_Sub #(
+  DIG_Sub_muffled #(
     .Bits(16)
   )
   DIG_Sub_i3 (
     .a( y_1[15:0] ),
     .b( y_2[15:0] ),
     .c_i( 1'b0 ),
-    .s( s1 )
+    .s( s1 ),
+    .c_o( unused_sub1_co )
   );
   assign s8 = s1[15];
   assign s4[11:0] = s1[15:4];
@@ -131,17 +139,18 @@ module muffled_effect (
   assign s4[14] = s8;
   assign s4[15] = s8;
   // Add_2
-  DIG_Add #(
+  DIG_Add_muffled #(
     .Bits(16)
   )
   DIG_Add_i4 (
     .a( s4[15:0] ),
     .b( y_2[15:0] ),
     .c_i( 1'b0 ),
-    .s( s5 )
+    .s( s5 ),
+    .c_o( unused_add1_co )
   );
   // Reg_2
-  DIG_Register_BUS #(
+  DIG_Register_BUS_muffled #(
     .Bits(16)
   )
   DIG_Register_BUS_i5 (
@@ -157,13 +166,14 @@ module muffled_effect (
   assign s6[14] = s9;
   assign s6[15] = s9;
   // Add_3
-  DIG_Add #(
+  DIG_Add_muffled #(
     .Bits(16)
   )
   DIG_Add_i6 (
     .a( s6[15:0] ),
     .b( y_2[15:0] ),
     .c_i( 1'b0 ),
-    .s( audio_out )
+    .s( audio_out ),
+    .c_o( unused_add2_co )
   );
 endmodule
