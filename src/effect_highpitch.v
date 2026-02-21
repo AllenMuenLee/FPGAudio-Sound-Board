@@ -119,9 +119,8 @@ module high_pitch_effect (
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
     .C( clk ),
-    .clr( 1'b0 ),
-    .out( s0 ),
-    .ovf( unused_counter_ovf )
+    .clr( reset ),
+    .out( s0 )
   );
   DIG_RAMDualAccess_highpitch #(
     .Bits(16),
@@ -133,7 +132,6 @@ module high_pitch_effect (
     .ld( 1'b1 ),
     .\1A ( s0 ),
     .\1Din ( audio_in[15:0] ),
-    .\1D ( unused_ram_1d ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
