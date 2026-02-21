@@ -152,7 +152,7 @@ module tb;
             $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
             reset_stats();                                                 // Added
             play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
-            print_stats({effect_name, " - Saw"});                          // Added
+            print_stats({effect_name, " - Saw "});                         
             audio_in = 16'sd0; repeat(SILENCE_SAMPLES) @(posedge clk);    // Added: silence gap
         end
     endtask
