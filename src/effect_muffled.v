@@ -62,7 +62,7 @@ endmodule
 
 module muffled_effect (
   input [15:0] audio_in,
-  input clock,
+  input wire clk,
   output [15:0] audio_out
 );
   wire [15:0] y_1;

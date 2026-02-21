@@ -101,7 +101,7 @@ module DIG_Register_BUS #(
 endmodule
 
 module low_pitch_effect (
-  input sys_clock,
+  input wire clk,
   input [15:0] audio_in,
   output [15:0] audio_out
 );

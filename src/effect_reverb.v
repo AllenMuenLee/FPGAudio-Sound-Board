@@ -75,7 +75,7 @@ endmodule
 
 
 module reverb_effect (
-  input sys_clock,
+  input wire clk,
   input [15:0] audio_in, // Audio input (not too loud or else)
   output [15:0] audio_out // evertime sound loops it becomes 25% vol
 
