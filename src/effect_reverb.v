@@ -33,7 +33,7 @@ endmodule
 
 module DIG_RAMDualPort
 #(
-    parameter Bits = 8,
+    parameter Bits = 16,
     parameter AddrBits = 4
 )
 (
@@ -91,7 +91,7 @@ module reverb_effect (
   )
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
-    .C( sys_clock ),
+    .C( clk ),
     .clr( 1'b0 ),
     .out( s0 )
   );
@@ -112,7 +112,7 @@ module reverb_effect (
     .Bits(16)
   )
   DIG_Add_i2 (
-    .a( audio_input ),
+    .a( audio_in ),
     .b( s3 ),
     .c_i( 1'b0 ),
     .s( s1 )
@@ -122,7 +122,7 @@ module reverb_effect (
     .Bits(16)
   )
   DIG_Add_i3 (
-    .a( audio_input ),
+    .a( audio_in ),
     .b( s2 ),
     .c_i( 1'b0 ),
     .s( audio_out )

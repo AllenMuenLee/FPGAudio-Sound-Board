@@ -83,7 +83,7 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Sub_i0 (
-    .a( Audio_in ),
+    .a( audio_in ),
     .b( y_1 ),
     .c_i( 1'b0 ),
     .s( s0 )
@@ -164,6 +164,6 @@ module muffled_effect (
     .a( s6 ),
     .b( y_2 ),
     .c_i( 1'b0 ),
-    .s( Audio_out )
+    .s( audio_out )
   );
 endmodule
