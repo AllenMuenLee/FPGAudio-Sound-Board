@@ -576,7 +576,7 @@
     wire s4;
     wire [10:0] s5;
     wire [10:0] s6;
-    wire s7;
+    reg s7;
     wire [10:0] s8;
     wire [10:0] s9;
     wire [15:0] s10;
