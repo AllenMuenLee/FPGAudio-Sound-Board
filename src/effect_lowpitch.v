@@ -102,8 +102,8 @@ endmodule
 
 module low_pitch_effect (
   input sys_clock,
-  input [15:0] audio_input,
-  output [15:0] audio_output
+  input [15:0] audio_in,
+  output [15:0] audio_out
 );
   wire [13:0] s0;
   wire [13:0] s1;
