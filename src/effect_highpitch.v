@@ -49,7 +49,7 @@ module DIG_RAMDualAccess
     // CAUTION: uses distributed RAM
     reg [(Bits-1):0] memory [0:((1 << AddrBits)-1)];
 
-    assign \1D = ld? memory[\1A ] : 16'(hz);
+    assign \1D = ld? memory[\1A ] : 16'hz;
     assign \2D = memory[\2A ];
 
     always @ (posedge C) begin
