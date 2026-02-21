@@ -19,7 +19,7 @@ module reverb_effect (
   wire unused_counter_ovf;
   wire unused_add0_co;
   wire unused_add1_co;
-  DIG_Counter_Nbit_reverb #(
+  DIG_Counter_Nbit #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
@@ -29,7 +29,7 @@ module reverb_effect (
     .out( s0 ),
     .ovf( unused_counter_ovf )
   );
-  DIG_RAMDualPort_reverb #(
+  DIG_RAMDualPort #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -42,7 +42,7 @@ module reverb_effect (
     .D( s2 )
   );
   // feedbmix
-  DIG_Add_reverb #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i2 (
@@ -53,7 +53,7 @@ module reverb_effect (
     .c_o( unused_add0_co )
   );
   // outputmix
-  DIG_Add_reverb #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i3 (
