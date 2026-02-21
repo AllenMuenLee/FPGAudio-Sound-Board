@@ -110,7 +110,7 @@ module muffled_effect (
   )
   DIG_Register_BUS_i2 (
     .D( s3 ),
-    .C( clock ),
+    .C( clk ),
     .en( 1'b1 ),
     .Q( y_1 )
   );
@@ -146,7 +146,7 @@ module muffled_effect (
   )
   DIG_Register_BUS_i5 (
     .D( s5 ),
-    .C( clock ),
+    .C( clk ),
     .en( 1'b1 ),
     .Q( y_2 )
   );
