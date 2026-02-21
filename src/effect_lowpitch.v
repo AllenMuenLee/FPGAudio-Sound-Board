@@ -5,7 +5,7 @@
 `timescale 1ns/1ps
 module DIG_Counter_Nbit
 #(
-    parameter Bits = 2
+    parameter Bits = 16
 )
 (
     output [(Bits-1):0] out,
@@ -49,7 +49,7 @@ module DIG_RAMDualAccess
     // CAUTION: uses distributed RAM
     reg [(Bits-1):0] memory [0:((1 << AddrBits)-1)];
 
-    assign \1D = ld? memory[\1A ] : 16'hz;
+    assign \1D = ld? memory[\1A ] : {Bits{1'b0}};
     assign \2D = memory[\2A ];
 
     always @ (posedge C) begin
@@ -62,7 +62,7 @@ endmodule
 
 module DIG_Add
 #(
-    parameter Bits = 1
+    parameter Bits = 16
 )
 (
     input [(Bits-1):0] a,
@@ -128,7 +128,7 @@ module low_pitch_effect (
     .C( clk ),
     .ld( 1'b1 ),
     .\1A ( s0 ),
-    .\1Din ( audio_in ),
+    .\1Din ( audio_in[15:0] ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );

@@ -46,7 +46,7 @@ module DIG_RAMDualPort
 );
   reg [(Bits-1):0] memory[0:((1 << AddrBits) - 1)];
 
-  assign D = ld? memory[A] : 'hz;
+  assign D = ld? memory[A] : {Bits{1'b0}};
 
   always @ (posedge C) begin
     if (str)
@@ -112,8 +112,8 @@ module reverb_effect (
     .Bits(16)
   )
   DIG_Add_i2 (
-    .a( audio_in ),
-    .b( s3 ),
+    .a( audio_in[15:0] ),
+    .b( s3[15:0] ),
     .c_i( 1'b0 ),
     .s( s1 )
   );
@@ -122,8 +122,8 @@ module reverb_effect (
     .Bits(16)
   )
   DIG_Add_i3 (
-    .a( audio_in ),
-    .b( s2 ),
+    .a( audio_in[15:0] ),
+    .b( s2[15:0] ),
     .c_i( 1'b0 ),
     .s( audio_out )
   );

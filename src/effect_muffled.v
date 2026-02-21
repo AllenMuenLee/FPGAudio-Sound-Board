@@ -83,8 +83,8 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Sub_i0 (
-    .a( audio_in ),
-    .b( y_1 ),
+    .a( audio_in[15:0] ),
+    .b( y_1[15:0] ),
     .c_i( 1'b0 ),
     .s( s0 )
   );
@@ -99,8 +99,8 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Add_i1 (
-    .a( s2 ),
-    .b( y_1 ),
+    .a( s2[15:0] ),
+    .b( y_1[15:0] ),
     .c_i( 1'b0 ),
     .s( s3 )
   );
@@ -119,8 +119,8 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Sub_i3 (
-    .a( y_1 ),
-    .b( y_2 ),
+    .a( y_1[15:0] ),
+    .b( y_2[15:0] ),
     .c_i( 1'b0 ),
     .s( s1 )
   );
@@ -135,8 +135,8 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Add_i4 (
-    .a( s4 ),
-    .b( y_2 ),
+    .a( s4[15:0] ),
+    .b( y_2[15:0] ),
     .c_i( 1'b0 ),
     .s( s5 )
   );
@@ -161,8 +161,8 @@ module muffled_effect (
     .Bits(16)
   )
   DIG_Add_i6 (
-    .a( s6 ),
-    .b( y_2 ),
+    .a( s6[15:0] ),
+    .b( y_2[15:0] ),
     .c_i( 1'b0 ),
     .s( audio_out )
   );

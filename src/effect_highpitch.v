@@ -49,7 +49,7 @@ module DIG_RAMDualAccess
     // CAUTION: uses distributed RAM
     reg [(Bits-1):0] memory [0:((1 << AddrBits)-1)];
 
-    assign \1D = ld? memory[\1A ] : 16'hz;
+    assign \1D = ld? memory[\1A ] : {Bits{1'b0}};
     assign \2D = memory[\2A ];
 
     always @ (posedge C) begin
@@ -128,7 +128,7 @@ module high_pitch_effect (
     .C( clk ),
     .ld( 1'b1 ),
     .\1A ( s0 ),
-    .\1Din ( audio_in ),
+    .\1Din ( audio_in[15:0] ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
