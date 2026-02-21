@@ -115,7 +115,7 @@ module high_pitch_effect (
   )
   DIG_Counter_Nbit_i0 (
     .en( 1'b1 ),
-    .C( sys_clock ),
+    .C( clk ),
     .clr( 1'b0 ),
     .out( s0 )
   );
@@ -146,7 +146,7 @@ module high_pitch_effect (
   )
   DIG_Register_BUS_i3 (
     .D( s3 ),
-    .C( sys_clock ),
+    .C( clk ),
     .en( 1'b1 ),
     .Q( s2 )
   );

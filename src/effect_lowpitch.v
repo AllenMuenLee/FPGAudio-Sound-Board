@@ -125,7 +125,7 @@ module low_pitch_effect (
   )
   DIG_RAMDualAccess_i1 (
     .str( 1'b1 ),
-    .C( sys_clock ),
+    .C( clk ),
     .ld( 1'b1 ),
     .\1A ( s0 ),
     .\1Din ( audio_in ),
@@ -146,7 +146,7 @@ module low_pitch_effect (
   )
   DIG_Register_BUS_i3 (
     .D( s3 ),
-    .C( sys_clock ),
+    .C( clk ),
     .en( 1'b1 ),
     .Q( s2 )
   );

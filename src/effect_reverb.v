@@ -103,7 +103,7 @@ module reverb_effect (
     .A( s0 ),
     .Din( s1 ),
     .str( 1'b1 ),
-    .C( sys_clock ),
+    .C( clk ),
     .ld( 1'b1 ),
     .D( s2 )
   );
