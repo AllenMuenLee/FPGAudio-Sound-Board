@@ -31,7 +31,7 @@ module audio_processor (
     wire [15:0] reverb_out;
     wire [15:0] muffled_out;
     
-    noise_gate ng_inst (.clk(clk), .audio_in(audio_in), .audio_out(noise_gate_out));
+    noise_gate ng_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(noise_gate_out));
     high_pitch_effect hp_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(high_pitch_out));
     low_pitch_effect lp_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(low_pitch_out));
     reverb_effect rev_inst (.clk(clk), .reset(reset), .audio_in(audio_in), .audio_out(reverb_out));
