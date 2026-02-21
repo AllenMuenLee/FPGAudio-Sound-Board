@@ -135,7 +135,7 @@ module tb;
     // ========================================================================
     task test_effect;
         input [2:0] effect_code;
-        input [192*8:1] effect_name;  // Fixed: match print_stats width
+        input [185*8:1] effect_name;  
         begin
             SW[2:0] = effect_code;
             $display("\n[%0t] Testing %0s (SW[2:0]=%b)", $time, effect_name, effect_code);
@@ -171,7 +171,7 @@ module tb;
     endtask
 
     task print_stats;
-        input [192*8:1] name;  // Fixed: adjusted string width
+        input [192*8:1] name;  // 192 chars total for name with suffix
         real avg_in, avg_out, rms_in, rms_out, gain_db;
         begin
             if (count_samples > 0) begin
@@ -212,7 +212,7 @@ module tb;
                 wait_sample_tick();
                 s = $sin(phase);
                 audio_in = 16'($rtoi(amplitude * s));
-                @(posedge clk);  // Added: let output settle
+                @(posedge clk);  // Let output settle
                 
                 // Added: Collect statistics
                 sum_in = sum_in + $itor(audio_in);
