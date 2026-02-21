@@ -131,7 +131,7 @@ module high_pitch_effect (
     .C( clk ),
     .ld( 1'b1 ),
     .\1A ( s0 ),
-    .\1Din ( audio_in[15:0] ),
+    .\1Din ( audio_in ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
