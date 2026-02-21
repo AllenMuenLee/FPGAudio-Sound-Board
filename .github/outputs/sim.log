@@ -38,11 +38,11 @@ Configuration:
 [35090000]   Sine: 1000 Hz
        Stats [Low Pitch - Sine]:
          In : min=-10000 max= 10000 avg=    77.2 RMS=  6944.4
-         Out: min=-10000 max= 10000 avg=   315.2 RMS=  6831.1 Gain=-0.14dB
+         Out: min=-10000 max= 10000 avg=     0.0 RMS=  6927.8 Gain=-0.02dB
 [39490000]   Saw : 500 Hz
        Stats [Low Pitch - Saw ]:
          In : min=-10000 max=  9999 avg=  -287.6 RMS=  5979.8
-         Out: min=-10000 max= 10000 avg=    52.0 RMS=  6935.1 Gain=1.29dB
+         Out: min=-10000 max= 10000 avg=  -138.3 RMS=  6881.0 Gain=1.22dB
 
 [43890000] Testing Reverb (SW[2:0]=011)
 [43990000]   Warming up buffer (200 samples)...
