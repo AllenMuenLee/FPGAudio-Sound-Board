@@ -21,7 +21,7 @@ module noise_gate (
   wire s4;
   wire [10:0] s5;
   wire [10:0] s6;
-  wire s7;
+  reg s7;
   wire [10:0] s8;
   wire [10:0] s9;
   wire [15:0] s10;
@@ -82,7 +82,20 @@ module noise_gate (
     .b( s2 ),
     .mul( s11 )
   );
-  assign s7 = ~ (s3 | ~ (s4 | s7));
+  reg s7;  // Changed to reg to break combinational loop
+  ...
+  // Gate state machine with proper sequential logic
+  always @(posedge clk or posedge reset) begin
+    if (reset) begin
+      s7 <= 1'b0;
+    end else begin
+      if (s3) begin
+        s7 <= 1'b1;
+      end else if (s4) begin
+        s7 <= 1'b0;
+      end
+    end
+  end
   Mux_2x1_NBits #(
     .Bits(11)
   )
