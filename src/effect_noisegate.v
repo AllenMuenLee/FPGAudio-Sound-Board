@@ -82,8 +82,6 @@ module noise_gate (
     .b( s2 ),
     .mul( s11 )
   );
-  reg s7;  // Changed to reg to break combinational loop
-  ...
   // Gate state machine with proper sequential logic
   always @(posedge clk or posedge reset) begin
     if (reset) begin
