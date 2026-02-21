@@ -44,7 +44,8 @@ module tb;
 
     // Added: Statistics collection variables
     real sum_in, sum_out, sum_sq_in, sum_sq_out;
-    integer count_samples, min_in, max_in, min_out, max_out;
+    integer count_samples;
+    reg signed [15:0] min_in, max_in, min_out, max_out;  // Fixed: match audio signal width
 
     audio_processor dut (
         .clk(clk),
@@ -134,7 +135,7 @@ module tb;
     // ========================================================================
     task test_effect;
         input [2:0] effect_code;
-        input [200*8:1] effect_name;
+        input [192*8:1] effect_name;  // Fixed: match print_stats width
         begin
             SW[2:0] = effect_code;
             $display("\n[%0t] Testing %0s (SW[2:0]=%b)", $time, effect_name, effect_code);
@@ -170,7 +171,7 @@ module tb;
     endtask
 
     task print_stats;
-        input [200*8:1] name;
+        input [192*8:1] name;  // Fixed: adjusted string width
         real avg_in, avg_out, rms_in, rms_out, gain_db;
         begin
             if (count_samples > 0) begin
