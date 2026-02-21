@@ -3,102 +3,6 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Counter_Nbit_lowpitch
-#(
-    parameter Bits = 16
-)
-(
-    output [(Bits-1):0] out,
-    output ovf,
-    input C,
-    input en,
-    input clr
-);
-    reg [(Bits-1):0] count;
-
-    always @ (posedge C) begin
-        if (clr)
-          count <= 'h0;
-        else if (en)
-          count <= count + 1'b1;
-    end
-
-    assign out = count;
-    assign ovf = en? &count : 1'b0;
-
-    initial begin
-        count = 'h0;
-    end
-endmodule
-
-module DIG_RAMDualAccess_lowpitch
-#(
-    parameter Bits = 16,
-    parameter AddrBits = 4
-)
-(
-    input C, // Clock signal
-    input ld,
-    input [(AddrBits-1):0] \1A ,
-    input [(AddrBits-1):0] \2A ,
-    input [(Bits-1):0] \1Din ,
-    input str,
-    output [(Bits-1):0] \1D ,
-    output [(Bits-1):0] \2D
-);
-    // CAUTION: uses distributed RAM
-    reg [(Bits-1):0] memory [0:((1 << AddrBits)-1)];
-
-    assign \1D = ld? memory[\1A ] : {Bits{1'b0}};
-    assign \2D = memory[\2A ];
-
-    always @ (posedge C) begin
-        if (str)
-            memory[\1A ] <= \1Din ;
-    end
-
-endmodule
-
-
-module DIG_Add_lowpitch
-#(
-    parameter Bits = 16
-)
-(
-    input [(Bits-1):0] a,
-    input [(Bits-1):0] b,
-    input c_i,
-    output [(Bits - 1):0] s,
-    output c_o
-);
-   wire [Bits:0] temp;
-
-   assign temp = a + b + {{Bits{1'b0}}, c_i};
-   assign s = temp [(Bits-1):0];
-   assign c_o = temp[Bits];
-endmodule
-
-
-
-module DIG_Register_BUS_lowpitch #(
-    parameter Bits = 1
-)
-(
-    input C,
-    input en,
-    input [(Bits - 1):0]D,
-    output [(Bits - 1):0]Q
-);
-
-    reg [(Bits - 1):0] state = 'h0;
-
-    assign Q = state;
-
-    always @ (posedge C) begin
-        if (en)
-            state <= D;
-   end
-endmodule
 
 module low_pitch_effect (
   input wire clk,
@@ -113,7 +17,7 @@ module low_pitch_effect (
   wire unused_counter_ovf;
   wire [15:0] unused_ram_1d;
   wire unused_add_co;
-  DIG_Counter_Nbit_lowpitch #(
+  DIG_Counter_Nbit #(
     .Bits(14)
   )
   DIG_Counter_Nbit_i0 (
@@ -123,7 +27,7 @@ module low_pitch_effect (
     .out( s0 ),
     .ovf( unused_counter_ovf )
   );
-  DIG_RAMDualAccess_lowpitch #(
+  DIG_RAMDualAccess #(
     .Bits(16),
     .AddrBits(14)
   )
@@ -137,7 +41,7 @@ module low_pitch_effect (
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
-  DIG_Add_lowpitch #(
+  DIG_Add #(
     .Bits(18)
   )
   DIG_Add_i2 (
@@ -147,7 +51,7 @@ module low_pitch_effect (
     .s( s3 ),
     .c_o( unused_add_co )
   );
-  DIG_Register_BUS_lowpitch #(
+  DIG_Register_BUS #(
     .Bits(18)
   )
   DIG_Register_BUS_i3 (

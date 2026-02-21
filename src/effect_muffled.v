@@ -3,62 +3,6 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Sub_muffled #(
-    parameter Bits = 2
-)
-(
-    input [(Bits-1):0] a,
-    input [(Bits-1):0] b,
-    input c_i,
-    output [(Bits-1):0] s,
-    output c_o
-);
-    wire [Bits:0] temp;
-
-    assign temp = a - b - {{Bits{1'b0}}, c_i};
-    assign s = temp[(Bits-1):0];
-    assign c_o = temp[Bits];
-endmodule
-
-module DIG_Add_muffled
-#(
-    parameter Bits = 1
-)
-(
-    input [(Bits-1):0] a,
-    input [(Bits-1):0] b,
-    input c_i,
-    output [(Bits - 1):0] s,
-    output c_o
-);
-   wire [Bits:0] temp;
-
-   assign temp = a + b + {{Bits{1'b0}}, c_i};
-   assign s = temp [(Bits-1):0];
-   assign c_o = temp[Bits];
-endmodule
-
-
-
-module DIG_Register_BUS_muffled #(
-    parameter Bits = 1
-)
-(
-    input C,
-    input en,
-    input [(Bits - 1):0]D,
-    output [(Bits - 1):0]Q
-);
-
-    reg [(Bits - 1):0] state = 'h0;
-
-    assign Q = state;
-
-    always @ (posedge C) begin
-        if (en)
-            state <= D;
-   end
-endmodule
 
 module muffled_effect (
   input [15:0] audio_in,
@@ -84,7 +28,7 @@ module muffled_effect (
   wire unused_add1_co;
   wire unused_add2_co;
   // Sub_1
-  DIG_Sub_muffled #(
+  DIG_Sub #(
     .Bits(16)
   )
   DIG_Sub_i0 (
@@ -101,7 +45,7 @@ module muffled_effect (
   assign s2[14] = s7;
   assign s2[15] = s7;
   // Add_1
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i1 (
@@ -112,7 +56,7 @@ module muffled_effect (
     .c_o( unused_add0_co )
   );
   // Reg_1
-  DIG_Register_BUS_muffled #(
+  DIG_Register_BUS #(
     .Bits(16)
   )
   DIG_Register_BUS_i2 (
@@ -122,7 +66,7 @@ module muffled_effect (
     .Q( y_1 )
   );
   // Sub_2
-  DIG_Sub_muffled #(
+  DIG_Sub #(
     .Bits(16)
   )
   DIG_Sub_i3 (
@@ -139,7 +83,7 @@ module muffled_effect (
   assign s4[14] = s8;
   assign s4[15] = s8;
   // Add_2
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i4 (
@@ -150,7 +94,7 @@ module muffled_effect (
     .c_o( unused_add1_co )
   );
   // Reg_2
-  DIG_Register_BUS_muffled #(
+  DIG_Register_BUS #(
     .Bits(16)
   )
   DIG_Register_BUS_i5 (
@@ -166,7 +110,7 @@ module muffled_effect (
   assign s6[14] = s9;
   assign s6[15] = s9;
   // Add_3
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i6 (
