@@ -24,7 +24,8 @@ module high_pitch_effect (
     .en( 1'b1 ),
     .C( clk ),
     .clr( reset ),
-    .out( s0 )
+    .out( s0 ),
+    .ovf( unused_counter_ovf )
   );
   DIG_RAMDualAccess #(
     .Bits(16),
@@ -36,6 +37,7 @@ module high_pitch_effect (
     .ld( 1'b1 ),
     .\1A ( s0 ),
     .\1Din ( audio_in[15:0] ),
+    .\1D ( unused_ram_1d ),
     .\2A ( s1 ),
     .\2D ( audio_out )
   );
