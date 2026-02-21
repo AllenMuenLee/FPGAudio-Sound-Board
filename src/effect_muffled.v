@@ -3,62 +3,6 @@
  * Any changes will be lost if this file is regenerated.
  */
 `timescale 1ns/1ps
-module DIG_Sub_muffled #(
-    parameter Bits = 2
-)
-(
-    input [(Bits-1):0] a,
-    input [(Bits-1):0] b,
-    input c_i,
-    output [(Bits-1):0] s,
-    output c_o
-);
-    wire [Bits:0] temp;
-
-    assign temp = a - b - {{Bits{1'b0}}, c_i};
-    assign s = temp[(Bits-1):0];
-    assign c_o = temp[Bits];
-endmodule
-
-module DIG_Add_muffled
-#(
-    parameter Bits = 1
-)
-(
-    input [(Bits-1):0] a,
-    input [(Bits-1):0] b,
-    input c_i,
-    output [(Bits - 1):0] s,
-    output c_o
-);
-   wire [Bits:0] temp;
-
-   assign temp = a + b + {{Bits{1'b0}}, c_i};
-   assign s = temp [(Bits-1):0];
-   assign c_o = temp[Bits];
-endmodule
-
-
-
-module DIG_Register_BUS_muffled #(
-    parameter Bits = 1
-)
-(
-    input C,
-    input en,
-    input [(Bits - 1):0]D,
-    output [(Bits - 1):0]Q
-);
-
-    reg [(Bits - 1):0] state = 'h0;
-
-    assign Q = state;
-
-    always @ (posedge C) begin
-        if (en)
-            state <= D;
-   end
-endmodule
 
 module muffled_effect (
   input [15:0] audio_in,
