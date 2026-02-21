@@ -100,7 +100,7 @@ module DIG_Register_BUS #(
    end
 endmodule
 
-module High_Pitch_Circuit (
+module high_pitch_effect (
   input sys_clock,
   input [15:0] audio_input,
   output [15:0] audio_output
