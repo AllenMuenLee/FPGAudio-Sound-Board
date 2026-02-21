@@ -106,7 +106,7 @@ module tb;
         $display("  Sine Tone:          %0d Hz", SINE_FREQ_HZ);
         $display("  Saw Tone:           %0d Hz", SAW_FREQ_HZ);
         $display("  Samples per Tone:   %0d", SAMPLES_PER_TONE);
-        $display("  Est. Total Cycles:  ~%0d", (SAMPLES_PER_TONE + SILENCE_SAMPLES) * 5 * 2 + 100);  // Added
+        $display("  Est. Total Cycles:  ~%0d", (SAMPLES_PER_TONE + SILENCE_SAMPLES) * 5 * 2 + 100 + 200*3);  // Updated: includes warmup
         $display("============================================================\n");
 
         audio_in = 16'sd0;
@@ -141,6 +141,13 @@ module tb;
             $display("\n[%0t] Testing %0s (SW[2:0]=%b)", $time, effect_name, effect_code);
             repeat(5) @(posedge clk);
             
+            // Added: Buffer warm-up for effects with delay lines (High/Low Pitch, Reverb)
+            if (effect_code == 3'b001 || effect_code == 3'b010 || effect_code == 3'b011) begin
+                $display("[%0t]   Warming up buffer (200 samples)...", $time);
+                play_sine_tone_nowarmup(SINE_FREQ_HZ, SINE_AMPLITUDE, 200);  // Prime buffer
+                audio_in = 16'sd0; repeat(SILENCE_SAMPLES) @(posedge clk);
+            end
+            
             // Sine test
             $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
             reset_stats();                                                 // Added
@@ -171,7 +178,7 @@ module tb;
     endtask
 
     task print_stats;
-        input [192*8:1] name;  // 192 chars total for name with suffix
+        input [192*8:1] name;  
         real avg_in, avg_out, rms_in, rms_out, gain_db;
         begin
             if (count_samples > 0) begin
@@ -196,6 +203,26 @@ module tb;
         begin
             do @(posedge clk);
             while (!sample_tick);
+        end
+    endtask
+
+    task play_sine_tone_nowarmup;  // Warm-up task without statistics
+        input integer freq_hz;
+        input integer amplitude;
+        input integer num_samples;
+        integer i;
+        real phase, phase_inc, s;
+        begin
+            phase = 0.0;
+            phase_inc = 2.0 * 3.14159265359 * freq_hz / AUDIO_SAMPLE_RATE;
+            for (i = 0; i < num_samples; i = i + 1) begin
+                wait_sample_tick();
+                s = $sin(phase);
+                audio_in = 16'($rtoi(amplitude * s));
+                @(posedge clk);
+                phase = phase + phase_inc;
+                if (phase > 6.28318530718) phase = phase - 6.28318530718;
+            end
         end
     endtask
 
@@ -244,7 +271,7 @@ module tb;
                 wait_sample_tick();
                 v = (2.0 * phase) - 1.0;
                 audio_in = 16'($rtoi(amplitude * v));
-                @(posedge clk);  // Added: let output settle
+                @(posedge clk);  // Let output settle
                 
                 // Added: Collect statistics (same as sine)
                 sum_in = sum_in + $itor(audio_in);
