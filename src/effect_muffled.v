@@ -28,7 +28,7 @@ module muffled_effect (
   wire unused_add1_co;
   wire unused_add2_co;
   // Sub_1
-  DIG_Sub_muffled #(
+  DIG_Sub #(
     .Bits(16)
   )
   DIG_Sub_i0 (
@@ -45,7 +45,7 @@ module muffled_effect (
   assign s2[14] = s7;
   assign s2[15] = s7;
   // Add_1
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i1 (
@@ -56,7 +56,7 @@ module muffled_effect (
     .c_o( unused_add0_co )
   );
   // Reg_1
-  DIG_Register_BUS_muffled #(
+  DIG_Register_BUS #(
     .Bits(16)
   )
   DIG_Register_BUS_i2 (
@@ -66,7 +66,7 @@ module muffled_effect (
     .Q( y_1 )
   );
   // Sub_2
-  DIG_Sub_muffled #(
+  DIG_Sub #(
     .Bits(16)
   )
   DIG_Sub_i3 (
@@ -83,7 +83,7 @@ module muffled_effect (
   assign s4[14] = s8;
   assign s4[15] = s8;
   // Add_2
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i4 (
@@ -94,7 +94,7 @@ module muffled_effect (
     .c_o( unused_add1_co )
   );
   // Reg_2
-  DIG_Register_BUS_muffled #(
+  DIG_Register_BUS #(
     .Bits(16)
   )
   DIG_Register_BUS_i5 (
@@ -110,7 +110,7 @@ module muffled_effect (
   assign s6[14] = s9;
   assign s6[15] = s9;
   // Add_3
-  DIG_Add_muffled #(
+  DIG_Add #(
     .Bits(16)
   )
   DIG_Add_i6 (
