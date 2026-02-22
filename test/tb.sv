@@ -26,6 +26,7 @@ module tb;
     parameter integer AUDIO_SAMPLE_RATE = 48_000;    // Changed: Standard 48kHz
     parameter integer SAMPLES_PER_TONE = 100;        // Changed: Reduced for file size
     parameter integer STATS_SAMPLES    = 2200;       // Added: Longer window for stable gain stats
+    parameter integer DISCARD_SAMPLES  = 600;        // Added: Center window away from effect phase edges
     parameter integer SINE_AMPLITUDE = 10_000;
     parameter integer SAW_AMPLITUDE  = 10_000;
     parameter integer SILENCE_SAMPLES = 20;          // Added: Gap between tests
@@ -138,6 +139,7 @@ module tb;
         input [2:0] effect_code;
         input [185*8:1] effect_name;  
         integer samples_for_stats;
+        integer lead_in_samples;
         begin
             SW[2:0] = effect_code;
             $display("\n[%0t] Testing %0s (SW[2:0]=%b)", $time, effect_name, effect_code);
@@ -145,6 +147,7 @@ module tb;
 
             // Use longer stats window for effects that hold/repeat samples
             samples_for_stats = (effect_code == 3'b001 || effect_code == 3'b010) ? STATS_SAMPLES : SAMPLES_PER_TONE;
+            lead_in_samples   = (effect_code == 3'b001 || effect_code == 3'b010) ? DISCARD_SAMPLES : 0;
             
             // Added: Buffer warm-up for effects with delay lines (High/Low Pitch, Reverb)
             if (effect_code == 3'b001 || effect_code == 3'b010 || effect_code == 3'b011) begin
@@ -157,6 +160,8 @@ module tb;
             $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
             reset_stats();                                                 // Added
             if (samples_for_stats > SAMPLES_PER_TONE) $dumpoff;
+            if (lead_in_samples > 0)
+                play_sine_tone_nowarmup(SINE_FREQ_HZ, SINE_AMPLITUDE, lead_in_samples);
             play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, samples_for_stats);
             if (samples_for_stats > SAMPLES_PER_TONE) $dumpon;
             print_stats({effect_name, " - Sine"});                         // Added
@@ -166,6 +171,8 @@ module tb;
             $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
             reset_stats();                                                 // Added
             if (samples_for_stats > SAMPLES_PER_TONE) $dumpoff;
+            if (lead_in_samples > 0)
+                play_saw_tone_nowarmup(SAW_FREQ_HZ, SAW_AMPLITUDE, lead_in_samples);
             play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, samples_for_stats);
             if (samples_for_stats > SAMPLES_PER_TONE) $dumpon;
             print_stats({effect_name, " - Saw "});                         
@@ -293,6 +300,26 @@ module tb;
                 if (audio_out > max_out) max_out = audio_out;
                 count_samples = count_samples + 1;
                 
+                phase = phase + phase_inc;
+                if (phase >= 1.0) phase = phase - 1.0;
+            end
+        end
+    endtask
+
+    task play_saw_tone_nowarmup;  // Warm-up task without statistics
+        input integer freq_hz;
+        input integer amplitude;
+        input integer num_samples;
+        integer i;
+        real phase, phase_inc, v;
+        begin
+            phase = 0.0;
+            phase_inc = (1.0 * freq_hz) / AUDIO_SAMPLE_RATE;
+            for (i = 0; i < num_samples; i = i + 1) begin
+                wait_sample_tick();
+                v = (2.0 * phase) - 1.0;
+                audio_in = 16'($rtoi(amplitude * v));
+                @(posedge clk);
                 phase = phase + phase_inc;
                 if (phase >= 1.0) phase = phase - 1.0;
             end
