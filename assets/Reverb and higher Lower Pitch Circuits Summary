@@ -1,0 +1,35 @@
+1. The Reverb (Delay) Circuit
+
+This circuit mimics sound bouncing off walls by looping audio back into itself.
+
+    Memory Type: Uses a Single-Port RAM where the same address is used for both reading the old sound and writing the new sound.
+
+    The Address Driver: A single Counter increments through every memory slot (0 to 214−1) at the sample rate, creating a fixed delay time.
+
+    The Feedback Loop: The output of the RAM is sent through a Barrel Shifter (to reduce volume) and then to an Adder (feedbmix) to be mixed with the live input.
+
+    The "Wet" Mix: This combined signal is written back into the RAM, creating a "looping" echo that gradually fades away.
+
+    Output Logic: An outputmix Adder combines the original Dry (input) and Wet (echo) signals for the final output.
+
+2. The Pitch-Shifting Circuit
+
+This circuit changes the frequency of the sound by reading the recorded audio faster or slower than it was captured.
+
+    Memory Type: Uses a Dual-Port RAM, allowing two independent "heads" to access the memory at the same time at different locations.
+
+    The Write Head: A standard Write Counter records the audio_input into Port 1 at a constant speed (Normal Pitch).
+
+    The Read Head (Phase Accumulator): Instead of a simple counter, it uses an Adder + Register loop to create a variable-speed counter.
+
+    Fixed-Point Math: By using an 18-bit accumulator for a 14-bit RAM address, the "extra" 4 bits act as decimals to allow for fractional speeds (like 0.5x speed).
+
+    The Splitter: A Splitter strips off those 4 decimal bits before the signal reaches the RAM's 2A (Address 2) pin, ensuring only whole-number addresses are used.
+
+    Speed Control: A Multiplexer (Mux) selects the "Step Value" added to the accumulator each cycle:
+
+        Step = 8: Half-speed (Deep "Darth Vader" voice).
+
+        Step = 16: Normal speed.
+
+        Step = 32: Double-speed (High "Chipmunk" voice).

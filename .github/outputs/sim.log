@@ -1,0 +1,31 @@
+TEST START
+============================================================
+  DE1-SoC Audio Processor Verification
+  CI/CD Automated Testing Suite
+============================================================
+Configuration:
+  Clock Frequency:    500 MHz
+  Audio Sample Rate:  500000000 Hz
+  Sine Tone:          20000000 Hz
+  Saw Tone:           20000000 Hz
+  Samples per Tone:   50
+============================================================
+
+[39000] Testing Effect 0 (Noise Gate) SW=000
+[49000]   Sine: 20000000 Hz
+[149000]   Saw : 20000000 Hz
+[249000] Testing Effect 1 (High Pitch) SW=001
+[259000]   Sine: 20000000 Hz
+[359000]   Saw : 20000000 Hz
+[459000] Testing Effect 2 (Low Pitch) SW=010
+[469000]   Sine: 20000000 Hz
+[569000]   Saw : 20000000 Hz
+[669000] Testing Effect 3 (Reverb) SW=011
+[679000]   Sine: 20000000 Hz
+[779000]   Saw : 20000000 Hz
+[879000] Testing Effect 4 (Muffled) SW=100
+[889000]   Sine: 20000000 Hz
+[989000]   Saw : 20000000 Hz
+
+[1089000] Simulation complete. Exiting...
+- test/tb.sv:179: Verilog $finish
