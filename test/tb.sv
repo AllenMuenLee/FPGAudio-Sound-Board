@@ -25,6 +25,7 @@ module tb;
     parameter integer CLK_FREQ_HZ = 50_000_000;
     parameter integer AUDIO_SAMPLE_RATE = 48_000;    // Changed: Standard 48kHz
     parameter integer SAMPLES_PER_TONE = 100;        // Changed: Reduced for file size
+    parameter integer STATS_SAMPLES    = 2200;       // Added: Longer window for stable gain stats
     parameter integer SINE_AMPLITUDE = 10_000;
     parameter integer SAW_AMPLITUDE  = 10_000;
     parameter integer SILENCE_SAMPLES = 20;          // Added: Gap between tests
@@ -136,10 +137,14 @@ module tb;
     task test_effect;
         input [2:0] effect_code;
         input [185*8:1] effect_name;  
+        integer samples_for_stats;
         begin
             SW[2:0] = effect_code;
             $display("\n[%0t] Testing %0s (SW[2:0]=%b)", $time, effect_name, effect_code);
             repeat(5) @(posedge clk);
+
+            // Use longer stats window for effects that hold/repeat samples
+            samples_for_stats = (effect_code == 3'b001 || effect_code == 3'b010) ? STATS_SAMPLES : SAMPLES_PER_TONE;
             
             // Added: Buffer warm-up for effects with delay lines (High/Low Pitch, Reverb)
             if (effect_code == 3'b001 || effect_code == 3'b010 || effect_code == 3'b011) begin
@@ -151,14 +156,18 @@ module tb;
             // Sine test
             $display("[%0t]   Sine: %0d Hz", $time, SINE_FREQ_HZ);
             reset_stats();                                                 // Added
-            play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, SAMPLES_PER_TONE);
+            if (samples_for_stats > SAMPLES_PER_TONE) $dumpoff;
+            play_sine_tone(SINE_FREQ_HZ, SINE_AMPLITUDE, samples_for_stats);
+            if (samples_for_stats > SAMPLES_PER_TONE) $dumpon;
             print_stats({effect_name, " - Sine"});                         // Added
             audio_in = 16'sd0; repeat(SILENCE_SAMPLES) @(posedge clk);    // Added: silence gap
             
             // Saw test
             $display("[%0t]   Saw : %0d Hz", $time, SAW_FREQ_HZ);
             reset_stats();                                                 // Added
-            play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, SAMPLES_PER_TONE);
+            if (samples_for_stats > SAMPLES_PER_TONE) $dumpoff;
+            play_saw_tone(SAW_FREQ_HZ, SAW_AMPLITUDE, samples_for_stats);
+            if (samples_for_stats > SAMPLES_PER_TONE) $dumpon;
             print_stats({effect_name, " - Saw "});                         
             audio_in = 16'sd0; repeat(SILENCE_SAMPLES) @(posedge clk);    // Added: silence gap
         end
