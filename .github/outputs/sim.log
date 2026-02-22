@@ -26,45 +26,45 @@ Configuration:
 [9390000]   Warming up buffer (200 samples)...
 [17790000]   Sine: 1000 Hz
        Stats [High Pitch - Sine]:
-         In : min=-10000 max= 10000 avg=    77.2 RMS=  6944.4
-         Out: min=-10000 max= 10000 avg=  1187.5 RMS=  6162.5 Gain=-1.04dB
-[22190000]   Saw : 500 Hz
+         In : min=-10000 max= 10000 avg=    19.3 RMS=  7074.8
+         Out: min=-10000 max= 10000 avg=  -133.5 RMS=  5237.8 Gain=-2.61dB
+[106190000]   Saw : 500 Hz
        Stats [High Pitch - Saw ]:
-         In : min=-10000 max=  9999 avg=  -287.6 RMS=  5979.8
-         Out: min=     0 max=     0 avg=     0.0 RMS=     0.0 Gain=-135.53dB
+         In : min=-10000 max=  9999 avg=    62.3 RMS=  5758.2
+         Out: min= -9791 max=  9999 avg=  4679.7 RMS=  7720.4 Gain=2.55dB
 
-[26590000] Testing Low Pitch (SW[2:0]=010)
-[26690000]   Warming up buffer (200 samples)...
-[35090000]   Sine: 1000 Hz
+[194590000] Testing Low Pitch (SW[2:0]=010)
+[194690000]   Warming up buffer (200 samples)...
+[203090000]   Sine: 1000 Hz
        Stats [Low Pitch - Sine]:
-         In : min=-10000 max= 10000 avg=    77.2 RMS=  6944.4
-         Out: min=     0 max=     0 avg=     0.0 RMS=     0.0 Gain=-136.83dB
-[39490000]   Saw : 500 Hz
+         In : min=-10000 max= 10000 avg=    19.3 RMS=  7074.8
+         Out: min= -8660 max=  8958 avg= -7554.9 RMS=  8679.0 Gain=1.78dB
+[291490000]   Saw : 500 Hz
        Stats [Low Pitch - Saw ]:
-         In : min=-10000 max=  9999 avg=  -287.6 RMS=  5979.8
-         Out: min=     0 max=  2083 avg=   833.2 RMS=  1317.4 Gain=-13.14dB
+         In : min=-10000 max=  9999 avg=    62.3 RMS=  5758.2
+         Out: min= -8660 max=  6249 avg= -7250.4 RMS=  7849.5 Gain=2.69dB
 
-[43890000] Testing Reverb (SW[2:0]=011)
-[43990000]   Warming up buffer (200 samples)...
-[52390000]   Sine: 1000 Hz
+[379890000] Testing Reverb (SW[2:0]=011)
+[379990000]   Warming up buffer (200 samples)...
+[388390000]   Sine: 1000 Hz
        Stats [Reverb - Sine]:
          In : min=-10000 max= 10000 avg=    77.2 RMS=  6944.4
-         Out: min= -9702 max= 32767 avg=  9592.4 RMS= 14343.3 Gain=6.30dB
-[56790000]   Saw : 500 Hz
+         Out: min= -6968 max= 32698 avg=  8123.8 RMS= 12547.4 Gain=5.14dB
+[392790000]   Saw : 500 Hz
        Stats [Reverb - Saw ]:
          In : min=-10000 max=  9999 avg=  -287.6 RMS=  5979.8
-         Out: min= -7468 max= 32767 avg= 10910.1 RMS= 17806.7 Gain=9.48dB
+         Out: min= -7417 max= 32767 avg=  7028.0 RMS= 15056.3 Gain=8.02dB
 
-[61190000] Testing Muffled (SW[2:0]=100)
-[61290000]   Sine: 1000 Hz
+[397190000] Testing Muffled (SW[2:0]=100)
+[397290000]   Sine: 1000 Hz
        Stats [Muffled - Sine]:
          In : min=-10000 max= 10000 avg=    77.2 RMS=  6944.4
          Out: min= -9957 max=  9957 avg=    25.7 RMS=  6916.1 Gain=-0.04dB
-[65690000]   Saw : 500 Hz
+[401690000]   Saw : 500 Hz
        Stats [Muffled - Saw ]:
          In : min=-10000 max=  9999 avg=  -287.6 RMS=  5979.8
          Out: min= -9896 max=  9895 avg=  -146.1 RMS=  5760.2 Gain=-0.32dB
 
-[70090000] ========== ALL TESTS PASSED ==========
+[406090000] ========== ALL TESTS PASSED ==========
 TEST PASSED
-- test/tb.sv:130: Verilog $finish
+- test/tb.sv:131: Verilog $finish
