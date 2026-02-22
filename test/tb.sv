@@ -31,7 +31,7 @@ module tb;
     parameter integer SAW_AMPLITUDE  = 10_000;
     parameter integer SILENCE_SAMPLES = 20;          // Added: Gap between tests
 
-    localparam integer SAMPLE_DIV = 1;
+    localparam integer SAMPLE_DIV = CLK_FREQ_HZ / AUDIO_SAMPLE_RATE; // ~1041 for 50MHz/48kHz
     localparam integer SINE_FREQ_HZ = 1_000;         // Changed: 1kHz for clarity
     localparam integer SAW_FREQ_HZ  = 500;           // Changed: 500Hz for clarity
 
